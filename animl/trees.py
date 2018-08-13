@@ -13,44 +13,33 @@ import re
 class ShadowDecTree:
     """
     A tree that shadows a decision tree as constructed by scikit-learn's
-    DecisionTree(Regressor|Classifier).  Each node has left and right
-    pointers to child nodes, if any.  As part of build process, the
+    DecisionTree(Regressor|Classifier).  As part of build process, the
     samples considered at each decision node or at each leaf node are
-    saved into field node_samples.
+    saved into a node field called node_samples.
     """
-    def __init__(self, tree, id, left=None, right=None, node_samples=None):
-        self.tree = tree
-        self.id = id
-        self.left = left
-        self.right = right
-        self.node_samples = node_samples
+    def __init__(self, tree_model, X_train, feature_names=None, class_names=None):
+        self.tree_model = tree_model
+        self.feature_names = feature_names
+        self.class_names = class_names
+        tree = tree_model.tree_
+        children_left = tree.children_left
+        children_right = tree.children_right
 
-    def split(self):
-        return self.tree.threshold[self.id]
+        node_to_samples = ShadowDecTree.get_node_samples(tree_model, X_train)
 
-    def feature(self):
-        return self.tree.feature[self.id]
+        def walk(node_id):
+            if (children_left[node_id] == -1 and children_right[node_id] == -1):  # leaf
+                t = ShadowDecTreeNode(self, node_id, node_samples=node_to_samples[node_id])
+                t.feature = feature_names[node_id]
+                return t
+            else:  # decision node
+                left = walk(children_left[node_id])
+                right = walk(children_right[node_id])
+                return ShadowDecTreeNode(self, node_id, left, right,
+                                         node_samples=node_to_samples[node_id])
 
-    def num_samples(self):
-        return self.tree.n_node_samples[self.id] # same as len(self.node_samples)
-
-    def prediction(self):
-        is_classifier = self.tree.n_classes > 1
-        if is_classifier:
-            counts = np.array(tree.value[self.id][0])
-            predicted_class = np.argmax(counts)
-            return predicted_class
-        else:
-            return self.tree.value[self.id][0][0]
-
-    def __str__(self):
-        if self.left is None and self.right is None:
-            return "pred={value},n={n}".format(value=round(self.prediction(),1),n=self.num_samples())
-        else:
-            return "({f}@{s} {left} {right})".format(f=self.feature(),
-                                                     s=round(self.split(),1),
-                                                     left=self.left if self.left is not None else '',
-                                                     right=self.right if self.right is not None else '')
+        root_node_id = 0
+        self.root = walk(root_node_id) # record root to actual shadow nodes
 
     @staticmethod
     def get_node_samples(tree_model, data):
@@ -71,22 +60,54 @@ class ShadowDecTree:
 
         return node_to_samples
 
-    @staticmethod
-    def from_model(tree_model):
-        tree = tree_model.tree_
-        children_left = tree.children_left
-        children_right = tree.children_right
 
-        node_to_samples = ShadowDecTree.get_node_samples(regr, data)
+class ShadowDecTreeNode:
+    """
+    A node in a shadow tree.  Each node has left and right
+    pointers to child nodes, if any.  As part of build process, the
+    samples considered at each decision node or at each leaf node are
+    saved into field node_samples.
+    """
+    def __init__(self, shadowtree, id, left=None, right=None, node_samples=None):
+        self.shadowtree = shadowtree
+        self.id = id
+        self.left = left
+        self.right = right
+        self.node_samples = node_samples
 
-        def walk(node_id):
-            if (children_left[node_id] == -1 and children_right[node_id] == -1):  # leaf
-                return ShadowDecTree(tree, node_id, node_samples=node_to_samples[node_id])
-            else:  # decision node
-                left = walk(children_left[node_id])
-                right = walk(children_right[node_id])
-                return ShadowDecTree(tree, node_id, left, right,
-                                     node_samples=node_to_samples[node_id])
+    def split(self):
+        return self.shadowtree.threshold[self.id]
 
-        root_node_id = 0
-        return walk(root_node_id)
+    def feature(self):
+        return self.shadowtree.feature[self.id]
+
+    def feature_name(self):
+        return self.shadowtree.feature_names[ self.feature() ]
+
+    def num_samples(self):
+        return self.shadowtree.n_node_samples[self.id] # same as len(self.node_samples)
+
+    def prediction(self):
+        is_classifier = self.shadowtree.n_classes > 1
+        if is_classifier:
+            counts = np.array(tree.value[self.id][0])
+            predicted_class = np.argmax(counts)
+            return predicted_class
+        else:
+            return self.shadowtree.value[self.id][0][0]
+
+    def prediction_name(self):
+        is_classifier = self.shadowtree.n_classes > 1
+        if is_classifier:
+            return self.shadowtree.class_names[ self.prediction() ]
+        return None
+
+    def __str__(self):
+        if self.left is None and self.right is None:
+            return "pred={value},n={n}".format(value=round(self.prediction(),1),n=self.num_samples())
+        else:
+            return "({f}@{s} {left} {right})".format(f=self.feature(),
+                                                     s=round(self.split(),1),
+                                                     left=self.left if self.left is not None else '',
+                                                     right=self.right if self.right is not None else '')
+
