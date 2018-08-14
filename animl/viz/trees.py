@@ -156,7 +156,8 @@ def node_split_viz(node, X, y, target_name, filename=None, showx=True, showy=Tru
     if not showx and not showy:
         ax.axis('off')
 
-    X = X[:,2]
+    X = X[:,node.feature()]
+    X, y = X[node.samples()], y[node.samples()]
     ax.scatter(X, y, s=2, c='#0570b0')
     left, right = node.samples_split()
     left = y[left]
