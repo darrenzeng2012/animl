@@ -19,6 +19,8 @@ class ShadowDecTree:
 
     Field leaves is list of shadow leaf nodes. Field internal is list of
     shadow non-leaf nodes.
+
+    Field root is the shadow tree root.
     """
     def __init__(self, tree_model, X_train, feature_names=None, class_names=None):
         self.tree_model = tree_model
@@ -79,8 +81,8 @@ class ShadowDecTree:
 class ShadowDecTreeNode:
     """
     A node in a shadow tree.  Each node has left and right
-    pointers to child nodes, if any.  As part of build process, the
-    samples considered at each decision node or at each leaf node are
+    pointers to child nodes, if any.  As part of tree construction process, the
+    samples examined at each decision node or at each leaf node are
     saved into field node_samples.
     """
     def __init__(self, shadowtree, id, left=None, right=None, node_samples=None):
