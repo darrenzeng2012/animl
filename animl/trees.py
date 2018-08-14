@@ -16,6 +16,9 @@ class ShadowDecTree:
     DecisionTree(Regressor|Classifier).  As part of build process, the
     samples considered at each decision node or at each leaf node are
     saved into a node field called node_samples.
+
+    Field leaves is list of shadow leaf nodes. Field internal is list of
+    shadow non-leaf nodes.
     """
     def __init__(self, tree_model, X_train, feature_names=None, class_names=None):
         self.tree_model = tree_model
@@ -27,19 +30,28 @@ class ShadowDecTree:
 
         node_to_samples = ShadowDecTree.get_node_samples(tree_model, X_train)
 
+        # use locals not args to walk() for recursion speed in python
+        leaves = []
+        internal = [] # non-leaf nodes
+
         def walk(node_id):
             if (children_left[node_id] == -1 and children_right[node_id] == -1):  # leaf
                 t = ShadowDecTreeNode(self, node_id, node_samples=node_to_samples[node_id])
-                t.feature = feature_names[node_id]
+                leaves.append(t)
                 return t
             else:  # decision node
                 left = walk(children_left[node_id])
                 right = walk(children_right[node_id])
-                return ShadowDecTreeNode(self, node_id, left, right,
-                                         node_samples=node_to_samples[node_id])
+                t = ShadowDecTreeNode(self, node_id, left, right,
+                                      node_samples=node_to_samples[node_id])
+                leaves.append(t)
+                return t
 
         root_node_id = 0
-        self.root = walk(root_node_id) # record root to actual shadow nodes
+        # record root to actual shadow nodes
+        self.root = walk(root_node_id)
+        self.leaves = leaves
+        self.internal = internal
 
     @staticmethod
     def get_node_samples(tree_model, data):
@@ -60,6 +72,9 @@ class ShadowDecTree:
 
         return node_to_samples
 
+    def __str__(self):
+        return str(self.root)
+
 
 class ShadowDecTreeNode:
     """
@@ -76,28 +91,30 @@ class ShadowDecTreeNode:
         self.node_samples = node_samples
 
     def split(self):
-        return self.shadowtree.threshold[self.id]
+        return self.shadowtree.tree_model.tree_.threshold[self.id]
 
     def feature(self):
-        return self.shadowtree.feature[self.id]
+        return self.shadowtree.tree_model.tree_.feature[self.id]
 
     def feature_name(self):
-        return self.shadowtree.feature_names[ self.feature() ]
+        if self.shadowtree.feature_names is not None:
+            return self.shadowtree.feature_names[ self.feature() ]
+        return self.feature()
 
     def num_samples(self):
-        return self.shadowtree.n_node_samples[self.id] # same as len(self.node_samples)
+        return self.shadowtree.tree_model.tree_.n_node_samples[self.id] # same as len(self.node_samples)
 
     def prediction(self):
-        is_classifier = self.shadowtree.n_classes > 1
+        is_classifier = self.shadowtree.tree_model.tree_.n_classes > 1
         if is_classifier:
             counts = np.array(tree.value[self.id][0])
             predicted_class = np.argmax(counts)
             return predicted_class
         else:
-            return self.shadowtree.value[self.id][0][0]
+            return self.shadowtree.tree_model.tree_.value[self.id][0][0]
 
     def prediction_name(self):
-        is_classifier = self.shadowtree.n_classes > 1
+        is_classifier = self.shadowtree.tree_model.tree_.n_classes > 1
         if is_classifier:
             return self.shadowtree.class_names[ self.prediction() ]
         return None
@@ -106,8 +123,20 @@ class ShadowDecTreeNode:
         if self.left is None and self.right is None:
             return "pred={value},n={n}".format(value=round(self.prediction(),1),n=self.num_samples())
         else:
-            return "({f}@{s} {left} {right})".format(f=self.feature(),
+            return "({f}@{s} {left} {right})".format(f=self.feature_name(),
                                                      s=round(self.split(),1),
                                                      left=self.left if self.left is not None else '',
                                                      right=self.right if self.right is not None else '')
 
+
+if __name__ == "__main__":
+    regr = tree.DecisionTreeRegressor(max_depth=5, random_state=666)
+    boston = load_boston()
+
+    X_train = pd.DataFrame(boston.data, columns=boston.feature_names)
+    y_train = boston.target
+
+    regr = regr.fit(X_train, y_train)
+
+    dtree = ShadowDecTree(regr, X_train, feature_names=X_train.columns)
+    print(dtree)
