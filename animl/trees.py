@@ -9,14 +9,19 @@ from sklearn.datasets import load_boston, load_iris
 from collections import defaultdict
 import string
 import re
-from typing import Mapping
+from typing import Mapping, List
 
 class ShadowDecTree:
     """
-    A tree that shadows a decision tree as constructed by scikit-learn's
+    The decision trees for classifiers and regressors from scikit-learn
+    are built for efficiency, not ease of tree walking. This class
+    is intended as a way to wrap all of that information in an easy to use
+    package.
+
+    This tree shadows a decision tree as constructed by scikit-learn's
     DecisionTree(Regressor|Classifier).  As part of build process, the
     samples considered at each decision node or at each leaf node are
-    saved into a node field called node_samples.
+    saved as a big dictionary for use by the nodes.
 
     Field leaves is list of shadow leaf nodes. Field internal is list of
     shadow non-leaf nodes.
@@ -27,11 +32,11 @@ class ShadowDecTree:
         self.tree_model = tree_model
         self.feature_names = feature_names
         self.class_names = class_names
+        self.node_to_samples = ShadowDecTree.node_samples(tree_model, X_train)
+
         tree = tree_model.tree_
         children_left = tree.children_left
         children_right = tree.children_right
-
-        self.node_to_samples = ShadowDecTree.get_node_samples(tree_model, X_train)
 
         # use locals not args to walk() for recursion speed in python
         leaves = []
@@ -46,7 +51,7 @@ class ShadowDecTree:
                 left = walk(children_left[node_id])
                 right = walk(children_right[node_id])
                 t = ShadowDecTreeNode(self, node_id, left, right)
-                leaves.append(t)
+                internal.append(t)
                 return t
 
         root_node_id = 0
@@ -55,12 +60,21 @@ class ShadowDecTree:
         self.leaves = leaves
         self.internal = internal
 
+    def nclasses(self):
+        return self.tree_model.tree_.n_classes[0]
+
     def nnodes(self) -> int:
         "Return total nodes in the tree"
         return self.tree_model.tree_.node_count
 
+    def leaf_sample_counts(self) -> List[int]:
+        return [self.tree_model.tree_.n_node_samples[leaf.id] for leaf in self.leaves]
+
+    def isclassifier(self):
+        return self.tree_model.tree_.n_classes > 1
+
     @staticmethod
-    def get_node_samples(tree_model, data) -> Mapping[int,list]:
+    def node_samples(tree_model, data) -> Mapping[int, list]:
         """
         Return dictionary mapping node id to list of sample indexes considered by
         the feature/split decision.
@@ -127,14 +141,16 @@ class ShadowDecTreeNode:
     def isleaf(self) -> bool:
         return self.left is None and self.right is None
 
+    def isclassifier(self):
+        return self.shadowtree.tree_model.tree_.n_classes > 1
+
     def prediction(self) -> (int,None):
         """
         If this is a leaf node, return the predicted continuous value, if this is a
         regressor, or the class number, if this is a classifier.
         """
         if not self.isleaf(): return None
-        is_classifier = self.shadowtree.tree_model.tree_.n_classes > 1
-        if is_classifier:
+        if self.isclassifier():
             counts = np.array(tree.value[self.id][0])
             predicted_class = np.argmax(counts)
             return predicted_class
@@ -146,9 +162,17 @@ class ShadowDecTreeNode:
         If the tree model is a classifier and we know the class names,
         return the class name associated with the prediction for this leaf node.
         """
-        is_classifier = self.shadowtree.tree_model.tree_.n_classes > 1
-        if is_classifier:
+        if self.isclassifier():
             return self.shadowtree.class_names[ self.prediction() ]
+        return None
+
+    def class_counts(self) -> (List[int],None):
+        """
+        If this tree model is a classifier, return a list with the count
+        associated with each class.
+        """
+        if self.isclassifier():
+            return np.array(tree.value[self.id][0])
         return None
 
     def __str__(self):

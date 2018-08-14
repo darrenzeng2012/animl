@@ -1,10 +1,12 @@
 import numpy as np
 import pandas as pd
 import graphviz
+from numpy.distutils.system_info import f2py_info
 from sklearn import tree
 from sklearn.datasets import load_boston, load_iris
 import string
 import re
+from animl.trees import *
 
 YELLOW = "#fefecd" # "#fbfbd0" # "#FBFEB0"
 BLUE = "#D9E6F5"
@@ -211,7 +213,6 @@ def old_dtreeviz(tree, X, y, precision=1, classnames=None, orientation="LR"):
                     color_spec = YELLOW
                 html = """<font face="Helvetica" color="black" point-size="12">{predicted}<br/>&nbsp;</font>""".format(predicted=predicted)
                 margin = prop_size(node_samples)
-                print "i=",i
                 st += 'leaf{i} [height=0 width="0.4" margin="{margin}" style={style} fillcolor="{colors}" shape=circle label=<{label}>]\n' \
                     .format(i=i, label=html, name=node_name, colors=color_spec, margin=margin,
                             style='wedged' if n_classes<=max_class_colors else 'filled')
@@ -228,43 +229,116 @@ def old_dtreeviz(tree, X, y, precision=1, classnames=None, orientation="LR"):
 
     return st
 
-def dtreeviz(tree, X, y, precision=1, classnames=None, orientation="LR"):
-    def get_feature(i):
-        name = X.columns[feature[i]]
-        node_name = ''.join(c for c in name if c not in string.punctuation)+str(i)
-        node_name = re.sub("["+string.punctuation+string.whitespace+"]", '_', node_name)
-        return name, node_name
-
+def dtreeviz(tree_model, X_train, y_train, precision=1, feature_names=None, class_names=None, orientation="TD"):
     def round(v,ndigits=precision):
         return format(v, '.' + str(ndigits) + 'f')
 
-    def dec_node_box(name, node_name, split):
-        html = """<table BORDER="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
-        <tr>
-          <td colspan="3" align="center" cellspacing="0" cellpadding="0" bgcolor="#fefecd" border="1" sides="b"><font face="Helvetica" color="#444443" point-size="12">{name}</font></td>
-        </tr>
-        <tr>
-          <td colspan="3" cellpadding="1" border="0" bgcolor="#fefecd"></td>
-        </tr>
-        <tr>
-          <td cellspacing="0" cellpadding="0" bgcolor="#fefecd" border="1" sides="r" align="right"><font face="Helvetica" color="#444443" point-size="11">split</font></td>
-          <td cellspacing="0" cellpadding="0" border="0"></td>
-          <td cellspacing="0" cellpadding="0" bgcolor="#fefecd" align="left"><font face="Helvetica" color="#444443" point-size="11">{split}</font></td>
-        </tr>
-        </table>""".format(name=name, split=split)
-        return '{node_name} [shape=box label=<{label}>]\n'.format(label=html, node_name=node_name)
+    def node_name(node : ShadowDecTreeNode) -> str:
+        node_name = ''.join(c for c in node.feature_name() if c not in string.punctuation)+str(node.id)
+        node_name = re.sub("["+string.punctuation+string.whitespace+"]", '_', node_name)
+        return node_name
 
     def dec_node(name, node_name, split):
-        html = """<font face="Helvetica" color="#444443" point-size="12">{name}<br/>@{split}</font>""".format(name=name, split=split)
-        return '{node_name} [shape=none label=<{label}>]\n'.format(label=html, node_name=node_name)
+        html = f"""<font face="Helvetica" color="#444443" point-size="12">{name}<br/>@{split}</font>"""
+        return f'{node_name} [shape=none label=<{html}>]'
 
     def prop_size(n):
+        leaf_sample_counts = shadow_tree.leaf_sample_counts()
+        min_samples = min(leaf_sample_counts)
+        max_samples = max(leaf_sample_counts)
+        sample_count_range = max_samples - min_samples
+
         margin_range = (0.00, 0.3)
         if sample_count_range>0:
             zero_to_one = (n - min_samples) / sample_count_range
             return zero_to_one * (margin_range[1] - margin_range[0]) + margin_range[0]
         else:
             return margin_range[0]
+
+    ranksep = ".22"
+    if orientation=="TD":
+        ranksep = ".35"
+
+
+    shadow_tree = ShadowDecTree(tree_model, X_train, feature_names=feature_names, class_names=class_names)
+
+    n_classes = shadow_tree.nclasses()
+    color_values = color_blind_friendly_colors[n_classes]
+
+    internal = []
+    for node in shadow_tree.internal:
+        nname = node_name(node)
+        # st += dec_node_box(name, nname, split=round(threshold[i]))
+        gr_node = dec_node(node.feature_name(), nname, split=round(node.split()))
+        internal.append( gr_node )
+
+    leaves = []
+    for node in shadow_tree.leaves:
+        if shadow_tree.isclassifier():
+            counts = node.class_counts()
+            predicted_class = np.argmax(counts)
+            predicted = predicted_class
+            if class_names:
+                predicted = class_names[predicted_class]
+            ratios = counts / node.nsamples()  # convert counts to ratios totalling 1.0
+            ratios = [round(r, 3) for r in ratios]
+            color_spec = ["{c};{r}".format(c=color_values[i], r=r) for i, r in
+                          enumerate(ratios)]
+            color_spec = ':'.join(color_spec)
+            if n_classes > max_class_colors:
+                color_spec = YELLOW
+            html = f"""<font face="Helvetica" color="black" point-size="12">{predicted}<br/>&nbsp;</font>"""
+            margin = prop_size(node.nsamples())
+            style = 'wedged' if n_classes <= max_class_colors else 'filled'
+            leaves.append( f'leaf{node.id} [height=0 width="0.4" margin="{margin}" style={style} fillcolor="{color_spec}" shape=circle label=<{html}>]' )
+        else:
+            value = node.prediction()
+            html = f"""<font face="Helvetica" color="#444443" point-size="11">{round(value)}</font>"""
+            margin = prop_size(node.nsamples())
+            leaves.append( f'leaf{node.id} [margin="{margin}" style=filled fillcolor="{YELLOW}" shape=circle label=<{html}>]' )
+
+    edges = []
+    # non leaf edges with > and <=
+    for node in shadow_tree.internal:
+        nname = node_name(node)
+        left = node.feature_name()
+        left_node_name = node_name(node.left)
+        if node.left.isleaf():
+            left = left_node_name ='leaf%d' % node.left.id
+        right_node_name = node_name(node.right)
+        if node.right.isleaf():
+            right = right_node_name ='leaf%d' % node.right.id
+        split = round(node.split())
+        left_html = '<font face="Helvetica" color="#444443" point-size="11">&lt;</font>'
+        right_html = '<font face="Helvetica" color="#444443" point-size="11">&ge;</font>'
+        if orientation=="TD":
+            ldistance = ".9"
+            rdistance = ".9"
+            langle = "-28"
+            rangle = "28"
+        else:
+            ldistance = "1.3" # not used in LR mode; just label not taillable.
+            rdistance = "1.3"
+            langle = "-90"
+            rangle = "90"
+        blankedge = 'label=<<font face="Helvetica" color="#444443" point-size="1">&nbsp;</font>>'
+        edges.append( f'{nname} -> {left_node_name} [{""} labelangle="{langle}" labeldistance="{ldistance}" taillabel=<{""}>]' )
+        edges.append( f'{nname} -> {right_node_name} [{""} labelangle="{rangle}" labeldistance="{rdistance}" taillabel=<{""}>]' )
+
+    newline = "\n\t"
+    st = f"""
+digraph G {{splines=line;
+    nodesep=0.1;
+    ranksep={ranksep};
+    rankdir={orientation};
+    node [margin="0.03" penwidth="0.5" width=.1, height=.1];
+    edge [arrowsize=.4 penwidth="0.5"]
+    
+    {newline.join(internal)}
+    {newline.join(edges)}
+    {newline.join(leaves)}
+}}
+    """
 
     return st
 
@@ -280,7 +354,7 @@ def boston():
     regr = regr.fit(data, boston.target)
 
     # st = dectreeviz(regr.tree_, data, boston.target)
-    st = dtreeviz(regr.tree_, data, boston.target, orientation="TD")
+    st = dtreeviz(regr, data, boston.target, feature_names=data.columns, orientation="TD")
 
     with open("/tmp/t3.dot", "w") as f:
         f.write(st)
@@ -299,7 +373,7 @@ def iris():
     clf = clf.fit(data, iris.target)
 
     # st = dectreeviz(clf.tree_, data, boston.target)
-    st = dtreeviz(clf.tree_, data, iris.target, orientation="TD", classnames=["setosa", "versicolor", "virginica"])
+    st = dtreeviz(clf, data, iris.target, orientation="TD", class_names=["setosa", "versicolor", "virginica"])
 
     with open("/tmp/t3.dot", "w") as f:
         f.write(st)
@@ -307,8 +381,8 @@ def iris():
     print(clf.tree_.value)
     return st
 
-st = iris()
-# st = boston()
+# st = iris()
+st = boston()
 print(st)
 graphviz.Source(st).view()
 
