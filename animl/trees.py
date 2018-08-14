@@ -9,6 +9,7 @@ from sklearn.datasets import load_boston, load_iris
 from collections import defaultdict
 import string
 import re
+from typing import Mapping
 
 class ShadowDecTree:
     """
@@ -30,7 +31,7 @@ class ShadowDecTree:
         children_left = tree.children_left
         children_right = tree.children_right
 
-        node_to_samples = ShadowDecTree.get_node_samples(tree_model, X_train)
+        self.node_to_samples = ShadowDecTree.get_node_samples(tree_model, X_train)
 
         # use locals not args to walk() for recursion speed in python
         leaves = []
@@ -38,14 +39,13 @@ class ShadowDecTree:
 
         def walk(node_id):
             if (children_left[node_id] == -1 and children_right[node_id] == -1):  # leaf
-                t = ShadowDecTreeNode(self, node_id, node_samples=node_to_samples[node_id])
+                t = ShadowDecTreeNode(self, node_id)
                 leaves.append(t)
                 return t
             else:  # decision node
                 left = walk(children_left[node_id])
                 right = walk(children_right[node_id])
-                t = ShadowDecTreeNode(self, node_id, left, right,
-                                      node_samples=node_to_samples[node_id])
+                t = ShadowDecTreeNode(self, node_id, left, right)
                 leaves.append(t)
                 return t
 
@@ -55,12 +55,12 @@ class ShadowDecTree:
         self.leaves = leaves
         self.internal = internal
 
-    def nnodes(self):
+    def nnodes(self) -> int:
         "Return total nodes in the tree"
         return self.tree_model.tree_.node_count
 
     @staticmethod
-    def get_node_samples(tree_model, data):
+    def get_node_samples(tree_model, data) -> Mapping[int,list]:
         """
         Return dictionary mapping node id to list of sample indexes considered by
         the feature/split decision.
@@ -89,12 +89,11 @@ class ShadowDecTreeNode:
     samples examined at each decision node or at each leaf node are
     saved into field node_samples.
     """
-    def __init__(self, shadowtree, id, left=None, right=None, node_samples=None):
+    def __init__(self, shadowtree, id, left=None, right=None):
         self.shadowtree = shadowtree
         self.id = id
         self.left = left
         self.right = right
-        self.node_samples_ = node_samples
 
     def split(self) -> (int,float):
         return self.shadowtree.tree_model.tree_.threshold[self.id]
@@ -102,7 +101,7 @@ class ShadowDecTreeNode:
     def feature(self) -> int:
         return self.shadowtree.tree_model.tree_.feature[self.id]
 
-    def feature_name(self) -> str:
+    def feature_name(self) -> (str,int):
         if self.shadowtree.feature_names is not None:
             return self.shadowtree.feature_names[ self.feature() ]
         return self.feature()
@@ -114,7 +113,7 @@ class ShadowDecTreeNode:
         or class.  If this is an internal node, it is the number of samples used
         to compute the split point.
         """
-        return self.node_samples_
+        return self.shadowtree.node_to_samples[self.id]
 
     def nsamples(self) -> int:
         """
