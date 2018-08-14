@@ -9,7 +9,7 @@ from sklearn.datasets import load_boston, load_iris
 from collections import defaultdict
 import string
 import re
-from typing import Mapping, List
+from typing import Mapping, List, Tuple
 
 class ShadowDecTree:
     """
@@ -32,6 +32,7 @@ class ShadowDecTree:
         self.tree_model = tree_model
         self.feature_names = feature_names
         self.class_names = class_names
+        self.X_train = X_train
         self.node_to_samples = ShadowDecTree.node_samples(tree_model, X_train)
 
         tree = tree_model.tree_
@@ -120,7 +121,7 @@ class ShadowDecTreeNode:
             return self.shadowtree.feature_names[ self.feature() ]
         return None
 
-    def samples(self) -> list:
+    def samples(self) -> List[int]:
         """
         Return a list of sample indexes associated with this node. If this is a
         leaf node, it indicates the samples used to compute the predicted value
@@ -137,6 +138,15 @@ class ShadowDecTreeNode:
         to compute the split point.
         """
         return self.shadowtree.tree_model.tree_.n_node_samples[self.id] # same as len(self.node_samples)
+
+    def samples_split(self) -> Tuple[np.ndarray,np.ndarray]:
+        """
+        Return the list of indexes to the left and the right of the split value.
+        """
+        samples = np.array(self.samples())
+        node_X_data = self.shadowtree.X_train[samples]
+        split = self.split()
+        return np.nonzero(node_X_data < split)[1], np.nonzero(node_X_data >= split)[1]
 
     def isleaf(self) -> bool:
         return self.left is None and self.right is None
