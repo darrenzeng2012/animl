@@ -89,7 +89,7 @@ def dtreeviz(tree_model, X_train, y_train, precision=1, feature_names=None, clas
             counts = node.class_counts()
             predicted_class = np.argmax(counts)
             predicted = predicted_class
-            if class_names:
+            if class_names is not None:
                 predicted = class_names[predicted_class]
             ratios = counts / node.nsamples()  # convert counts to ratios totalling 1.0
             ratios = [round(r, 3) for r in ratios]
@@ -136,49 +136,49 @@ digraph G {{splines=line;
 }}
     """
 
-    return st
+    return graphviz.Source(st)
 
-def boston():
-    regr = tree.DecisionTreeRegressor(max_depth=4, random_state=666)
-    boston = load_boston()
-
-    print(boston.data.shape, boston.target.shape)
-
-    data = pd.DataFrame(boston.data)
-    data.columns =boston.feature_names
-
-    regr = regr.fit(data, boston.target)
-
-    # st = dectreeviz(regr.tree_, data, boston.target)
-    st = dtreeviz(regr, data, boston.target, feature_names=data.columns, orientation="TD")
-
-    with open("/tmp/t3.dot", "w") as f:
-        f.write(st)
-
-    return st
-
-def iris():
-    clf = tree.DecisionTreeClassifier(max_depth=2, random_state=666)
-    iris = load_iris()
-
-    print(iris.data.shape, iris.target.shape)
-
-    data = pd.DataFrame(iris.data)
-    data.columns = iris.feature_names
-
-    clf = clf.fit(data, iris.target)
-
-    # st = dectreeviz(clf.tree_, data, boston.target)
-    st = dtreeviz(clf, data, iris.target, orientation="TD", class_names=["setosa", "versicolor", "virginica"])
-
-    with open("/tmp/t3.dot", "w") as f:
-        f.write(st)
-
-    print(clf.tree_.value)
-    return st
-
-st = iris()
-# st = boston()
-print(st)
-graphviz.Source(st).view()
-
+# def boston():
+#     regr = tree.DecisionTreeRegressor(max_depth=4, random_state=666)
+#     boston = load_boston()
+#
+#     print(boston.data.shape, boston.target.shape)
+#
+#     data = pd.DataFrame(boston.data)
+#     data.columns =boston.feature_names
+#
+#     regr = regr.fit(data, boston.target)
+#
+#     # st = dectreeviz(regr.tree_, data, boston.target)
+#     st = dtreeviz(regr, data, boston.target, feature_names=data.columns, orientation="TD")
+#
+#     with open("/tmp/t3.dot", "w") as f:
+#         f.write(st)
+#
+#     return st
+#
+# def iris():
+#     clf = tree.DecisionTreeClassifier(max_depth=2, random_state=666)
+#     iris = load_iris()
+#
+#     print(iris.data.shape, iris.target.shape)
+#
+#     data = pd.DataFrame(iris.data)
+#     data.columns = iris.feature_names
+#
+#     clf = clf.fit(data, iris.target)
+#
+#     # st = dectreeviz(clf.tree_, data, boston.target)
+#     st = dtreeviz(clf, data, iris.target, orientation="TD", class_names=["setosa", "versicolor", "virginica"])
+#
+#     with open("/tmp/t3.dot", "w") as f:
+#         f.write(st)
+#
+#     print(clf.tree_.value)
+#     return st
+#
+# st = iris()
+# # st = boston()
+# print(st)
+# graphviz.Source(st).view()
+#
