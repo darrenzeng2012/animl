@@ -28,7 +28,7 @@ class ShadowDecTree:
 
     Field root is the shadow tree root.
     """
-    def __init__(self, tree_model, X_train, feature_names=None, class_names=None):
+    def __init__(self, tree_model, X_train, feature_names, class_names=None):
         self.tree_model = tree_model
         self.feature_names = feature_names
         self.class_names = class_names

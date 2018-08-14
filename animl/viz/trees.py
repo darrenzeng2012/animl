@@ -6,6 +6,7 @@ from sklearn import tree
 from sklearn.datasets import load_boston, load_iris
 import string
 import re
+import matplotlib.pyplot as plt
 from animl.trees import *
 
 YELLOW = "#fefecd" # "#fbfbd0" # "#FBFEB0"
@@ -38,7 +39,7 @@ color_blind_friendly_colors = [
 max_class_colors = len(color_blind_friendly_colors)-1
 
 
-def dtreeviz(tree_model, X_train, y_train, precision=1, feature_names=None, class_names=None, orientation="TD"):
+def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_names=None, precision=1, orientation="TD"):
     def round(v,ndigits=precision):
         return format(v, '.' + str(ndigits) + 'f')
 
@@ -137,6 +138,38 @@ digraph G {{splines=line;
     """
 
     return graphviz.Source(st)
+
+
+def node_split_viz(node, X, y, target_name, filename=None, showx=True, showy=True, figsize=None, label_fontsize=18):
+    fig, ax = plt.subplots(1, 1, figsize=figsize)
+    if showx:
+        ax.set_xlabel(node.feature_name(), fontsize=label_fontsize, fontname="Arial")
+    else:
+        ax.xaxis.set_visible(False)
+        ax.set_xticks([])
+    if showy:
+        ax.set_ylabel(target_name, fontsize=label_fontsize, fontname="Arial")
+    else:
+        ax.yaxis.set_visible(False)
+        ax.set_yticks([])
+
+    if not showx and not showy:
+        ax.axis('off')
+
+    X = X[:,2]
+    ax.scatter(X, y, s=2, c='#0570b0')
+    left, right = node.samples_split()
+    left = y[left]
+    right = y[right]
+    split = node.split()
+    ax.plot([min(X),split],[np.mean(left),np.mean(left)],'--', color='#444443', linewidth=1.3)
+    ax.plot([split,split],[min(y),max(y)],'--', color='#444443', linewidth=1.3)
+    ax.plot([split,max(X)],[np.mean(right),np.mean(right)],'--', color='#444443', linewidth=1.3)
+
+    plt.tight_layout()
+    if filename is not None:
+        plt.savefig(filename, dpi=600)
+        plt.close()
 
 # def boston():
 #     regr = tree.DecisionTreeRegressor(max_depth=4, random_state=666)
