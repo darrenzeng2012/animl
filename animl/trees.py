@@ -55,6 +55,10 @@ class ShadowDecTree:
         self.leaves = leaves
         self.internal = internal
 
+    def nnodes(self):
+        "Return total nodes in the tree"
+        return self.tree_model.tree_.node_count
+
     @staticmethod
     def get_node_samples(tree_model, data):
         """
@@ -90,23 +94,46 @@ class ShadowDecTreeNode:
         self.id = id
         self.left = left
         self.right = right
-        self.node_samples = node_samples
+        self.node_samples_ = node_samples
 
-    def split(self):
+    def split(self) -> (int,float):
         return self.shadowtree.tree_model.tree_.threshold[self.id]
 
-    def feature(self):
+    def feature(self) -> int:
         return self.shadowtree.tree_model.tree_.feature[self.id]
 
-    def feature_name(self):
+    def feature_name(self) -> str:
         if self.shadowtree.feature_names is not None:
             return self.shadowtree.feature_names[ self.feature() ]
         return self.feature()
 
-    def num_samples(self):
+    def samples(self) -> list:
+        """
+        Return a list of sample indexes associated with this node. If this is a
+        leaf node, it indicates the samples used to compute the predicted value
+        or class.  If this is an internal node, it is the number of samples used
+        to compute the split point.
+        """
+        return self.node_samples_
+
+    def nsamples(self) -> int:
+        """
+        Return the number of samples associated with this node. If this is a
+        leaf node, it indicates the samples used to compute the predicted value
+        or class. If this is an internal node, it is the number of samples used
+        to compute the split point.
+        """
         return self.shadowtree.tree_model.tree_.n_node_samples[self.id] # same as len(self.node_samples)
 
-    def prediction(self):
+    def isleaf(self) -> bool:
+        return self.left is None and self.right is None
+
+    def prediction(self) -> (int,None):
+        """
+        If this is a leaf node, return the predicted continuous value, if this is a
+        regressor, or the class number, if this is a classifier.
+        """
+        if not self.isleaf(): return None
         is_classifier = self.shadowtree.tree_model.tree_.n_classes > 1
         if is_classifier:
             counts = np.array(tree.value[self.id][0])
@@ -115,7 +142,11 @@ class ShadowDecTreeNode:
         else:
             return self.shadowtree.tree_model.tree_.value[self.id][0][0]
 
-    def prediction_name(self):
+    def prediction_name(self) -> (str,None):
+        """
+        If the tree model is a classifier and we know the class names,
+        return the class name associated with the prediction for this leaf node.
+        """
         is_classifier = self.shadowtree.tree_model.tree_.n_classes > 1
         if is_classifier:
             return self.shadowtree.class_names[ self.prediction() ]
@@ -123,7 +154,7 @@ class ShadowDecTreeNode:
 
     def __str__(self):
         if self.left is None and self.right is None:
-            return "pred={value},n={n}".format(value=round(self.prediction(),1),n=self.num_samples())
+            return "pred={value},n={n}".format(value=round(self.prediction(),1), n=self.nsamples())
         else:
             return "({f}@{s} {left} {right})".format(f=self.feature_name(),
                                                      s=round(self.split(),1),
