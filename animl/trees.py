@@ -115,10 +115,10 @@ class ShadowDecTreeNode:
     def feature(self) -> int:
         return self.shadowtree.tree_model.tree_.feature[self.id]
 
-    def feature_name(self) -> (str,int):
+    def feature_name(self) -> (str,None):
         if self.shadowtree.feature_names is not None:
             return self.shadowtree.feature_names[ self.feature() ]
-        return self.feature()
+        return None
 
     def samples(self) -> list:
         """
@@ -172,7 +172,7 @@ class ShadowDecTreeNode:
         associated with each class.
         """
         if self.isclassifier():
-            return np.array(tree.value[self.id][0])
+            return np.array(self.shadowtree.tree_model.tree_.value[self.id][0])
         return None
 
     def __str__(self):
