@@ -8,6 +8,7 @@ import string
 import re
 import matplotlib.pyplot as plt
 from animl.trees import *
+from numbers import Number
 
 YELLOW = "#fefecd" # "#fbfbd0" # "#FBFEB0"
 BLUE = "#D9E6F5"
@@ -77,6 +78,8 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
     n_classes = shadow_tree.nclasses()
     color_values = color_blind_friendly_colors[n_classes]
 
+    figsize = (5, 3)
+
     internal = []
     for node in shadow_tree.internal:
         nname = node_name(node)
@@ -84,8 +87,14 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         gr_node = dec_node(node.feature_name(), nname, split=round(node.split()))
         internal.append( gr_node )
 
+        node_split_viz(node, X_train, y_train, filename=f"/tmp/node{node.id}.png", target_name=target_name,
+                       figsize=figsize)
+
     leaves = []
     for node in shadow_tree.leaves:
+        node_split_viz(node, X_train, y_train, filename=f"/tmp/node{node.id}.png", target_name=target_name,
+                       figsize=figsize)
+
         if shadow_tree.isclassifier():
             counts = node.class_counts()
             predicted_class = np.argmax(counts)
@@ -140,7 +149,15 @@ digraph G {{splines=line;
     return graphviz.Source(st)
 
 
-def node_split_viz(node, X, y, target_name, filename=None, showx=True, showy=True, figsize=None, label_fontsize=18):
+def node_split_viz(node : ShadowDecTreeNode,
+                   X : (pd.DataFrame,np.ndarray),
+                   y : (pd.Series,np.ndarray),
+                   target_name : str,
+                   filename:str=None,
+                   showx=True,
+                   showy=True,
+                   figsize:Tuple[Number,Number]=None,
+                   label_fontsize:int=18):
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     if showx:
         ax.set_xlabel(node.feature_name(), fontsize=label_fontsize, fontname="Arial")
@@ -156,10 +173,14 @@ def node_split_viz(node, X, y, target_name, filename=None, showx=True, showy=Tru
     if not showx and not showy:
         ax.axis('off')
 
+    if isinstance(X,pd.DataFrame):
+        X = X.values
+    if isinstance(y,pd.Series):
+        y = y.values
     X = X[:,node.feature()]
     X, y = X[node.samples()], y[node.samples()]
     ax.scatter(X, y, s=2, c='#0570b0')
-    left, right = node.samples_split()
+    left, right = node.split_samples()
     left = y[left]
     right = y[right]
     split = node.split()
@@ -172,24 +193,23 @@ def node_split_viz(node, X, y, target_name, filename=None, showx=True, showy=Tru
         plt.savefig(filename, dpi=600)
         plt.close()
 
-# def boston():
-#     regr = tree.DecisionTreeRegressor(max_depth=4, random_state=666)
-#     boston = load_boston()
-#
-#     print(boston.data.shape, boston.target.shape)
-#
-#     data = pd.DataFrame(boston.data)
-#     data.columns =boston.feature_names
-#
-#     regr = regr.fit(data, boston.target)
-#
-#     # st = dectreeviz(regr.tree_, data, boston.target)
-#     st = dtreeviz(regr, data, boston.target, feature_names=data.columns, orientation="TD")
-#
-#     with open("/tmp/t3.dot", "w") as f:
-#         f.write(st)
-#
-#     return st
+def boston():
+    regr = tree.DecisionTreeRegressor(max_depth=4, random_state=666)
+    boston = load_boston()
+
+    data = pd.DataFrame(boston.data)
+    data.columns =boston.feature_names
+
+    regr = regr.fit(data, boston.target)
+
+    # st = dectreeviz(regr.tree_, data, boston.target)
+    st = dtreeviz(regr, data, boston.target, target_name='price',
+                  feature_names=data.columns, orientation="TD")
+
+    with open("/tmp/t3.dot", "w") as f:
+        f.write(st.source)
+
+    return st
 #
 # def iris():
 #     clf = tree.DecisionTreeClassifier(max_depth=2, random_state=666)
@@ -211,8 +231,7 @@ def node_split_viz(node, X, y, target_name, filename=None, showx=True, showy=Tru
 #     print(clf.tree_.value)
 #     return st
 #
-# st = iris()
-# # st = boston()
-# print(st)
-# graphviz.Source(st).view()
+#st = iris()
+st = boston()
+st.view()
 #

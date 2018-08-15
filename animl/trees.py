@@ -32,6 +32,8 @@ class ShadowDecTree:
         self.tree_model = tree_model
         self.feature_names = feature_names
         self.class_names = class_names
+        if isinstance(X_train, pd.DataFrame):
+            X_train = X_train.values
         self.X_train = X_train
         self.node_to_samples = ShadowDecTree.node_samples(tree_model, X_train)
 
@@ -139,14 +141,16 @@ class ShadowDecTreeNode:
         """
         return self.shadowtree.tree_model.tree_.n_node_samples[self.id] # same as len(self.node_samples)
 
-    def samples_split(self) -> Tuple[np.ndarray,np.ndarray]:
+    def split_samples(self) -> Tuple[np.ndarray, np.ndarray]:
         """
         Return the list of indexes to the left and the right of the split value.
         """
         samples = np.array(self.samples())
-        node_X_data = self.shadowtree.X_train[samples]
+        node_X_data = self.shadowtree.X_train[samples,self.feature()]
         split = self.split()
-        return np.nonzero(node_X_data < split)[1], np.nonzero(node_X_data >= split)[1]
+        left = np.nonzero(node_X_data < split)[0]
+        right = np.nonzero(node_X_data >= split)[0]
+        return left, right
 
     def isleaf(self) -> bool:
         return self.left is None and self.right is None
