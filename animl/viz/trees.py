@@ -87,13 +87,17 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         gr_node = dec_node(node.feature_name(), nname, split=round(node.split()))
         internal.append( gr_node )
 
-        node_split_viz(node, X_train, y_train, filename=f"/tmp/node{node.id}.png", target_name=target_name,
-                       figsize=figsize)
+        node_split_viz(node, X_train, y_train, filename=f"/tmp/node{node.id}.png",
+                       target_name=target_name,
+                       figsize=figsize,
+                       showx=False)
 
     leaves = []
     for node in shadow_tree.leaves:
-        node_split_viz(node, X_train, y_train, filename=f"/tmp/node{node.id}.png", target_name=target_name,
-                       figsize=figsize)
+        node_split_viz(node, X_train, y_train, filename=f"/tmp/node{node.id}.png",
+                       target_name=target_name,
+                       figsize=figsize,
+                       showx=False)
 
         if shadow_tree.isclassifier():
             counts = node.class_counts()
@@ -190,7 +194,7 @@ def node_split_viz(node : ShadowDecTreeNode,
 
     plt.tight_layout()
     if filename is not None:
-        plt.savefig(filename, dpi=600)
+        plt.savefig(filename, dpi=600, bbox_inches='tight', pad_inches=0)
         plt.close()
 
 def boston():
