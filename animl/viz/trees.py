@@ -215,8 +215,13 @@ def node_split_viz(node : ShadowDecTreeNode,
         X = X.values
     if isinstance(y,pd.Series):
         y = y.values
-    X = X[:,node.feature()]
+
+    if node.isleaf():
+        X = np.arange(0,len(X))
+    else:
+        X = X[:,node.feature()]
     X, y = X[node.samples()], y[node.samples()]
+
     ax.scatter(X, y, s=2, c='#0570b0')
     left, right = node.split_samples()
     left = y[left]
@@ -236,7 +241,7 @@ def node_split_viz(node : ShadowDecTreeNode,
         plt.close()
 
 def boston():
-    regr = tree.DecisionTreeRegressor(max_depth=2, random_state=666)
+    regr = tree.DecisionTreeRegressor(max_depth=3, random_state=666)
     boston = load_boston()
 
     data = pd.DataFrame(boston.data)
