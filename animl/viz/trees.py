@@ -118,17 +118,18 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
                        target_name=target_name,
                        figsize=figsize,
                        y_range=y_range,
-                       showy_label=node==shadow_tree.root,
+                       show_ylabel=node == shadow_tree.root,
                        showx=False)
 
     leaves = []
     for node in shadow_tree.leaves:
         node_split_viz(node, X_train, y_train, filename=f"/tmp/node{node.id}.png",
-                       target_name=target_name,
+                       target_name=f"${target_name}_i$",
+                       feature_name=f"$i$",
                        figsize=figsize,
                        y_range=y_range,
-                       showy_label=node==shadow_tree.root,
-                       showx=False)
+                       show_ylabel=True,
+                       showx=True)
 
         if shadow_tree.isclassifier():
             counts = node.class_counts()
@@ -185,24 +186,26 @@ def node_split_viz(node : ShadowDecTreeNode,
                    X : (pd.DataFrame,np.ndarray),
                    y : (pd.Series,np.ndarray),
                    target_name : str,
+                   feature_name : str=None,
                    filename:str=None,
                    showx=True,
                    showy=True,
-                   showy_label=True,
+                   show_ylabel=True,
                    y_range=None,
                    figsize:Tuple[Number,Number]=None,
                    label_fontsize:int=18):
     fig, ax = plt.subplots(1, 1, figsize=figsize)
 
-    if showy_label: showy=True
+    fname = feature_name if feature_name is not None else node.feature_name()
+    if show_ylabel: showy=True
     if showx:
-        ax.set_xlabel(node.feature_name(), fontsize=label_fontsize, fontname="Arial")
+        ax.set_xlabel(fname, fontsize=label_fontsize, fontname="Arial")
     else:
         ax.xaxis.set_visible(False)
         ax.set_xticks([])
     if showy:
         ax.set_ylim(y_range)
-        if showy_label:
+        if show_ylabel:
             ax.set_ylabel(target_name, fontsize=label_fontsize, fontname="Arial")
     else:
         ax.yaxis.set_visible(False)
