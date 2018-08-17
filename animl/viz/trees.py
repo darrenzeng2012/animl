@@ -44,7 +44,8 @@ color_blind_friendly_colors = [
 max_class_colors = len(color_blind_friendly_colors)-1
 
 
-def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_names=None, precision=1, orientation="TD"):
+def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_names=None,
+             precision=1, orientation="TD", show_edges=False):
     def round(v,ndigits=precision):
         return format(v, '.' + str(ndigits) + 'f')
 
@@ -63,7 +64,8 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
                 <td port="img" fixedsize="true" width="101.25" height="45"><img src="/tmp/node{node.id}.svg"/></td>
         </tr>
         </table>"""
-        return f'{node_name} [margin="0" shape=none label=<{html}>]'
+        gr_node = f'{node_name} [margin="0" shape=none label=<{html}>]'
+        return gr_node
 
 
     def regr_leaf_node(node):
@@ -71,9 +73,9 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         # html = f"""<font face="Helvetica" color="#444443" point-size="11">{round(value)}</font>"""
         # margin = prop_size(node.nsamples())
         # return f'leaf{node.id} [margin="{margin}" style=filled fillcolor="{YELLOW}" shape=circle label=<{html}>]'
-        html = f"""<table border="0">
+        html = f"""<table border="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
         <tr>
-                <td fixedsize="true" width="20.25" height="45"><img src="/tmp/node{node.id}.svg"/></td>
+                <td port="img" fixedsize="true" width="18" height="45"><img src="/tmp/node{node.id}.svg"/></td>
         </tr>
         <tr>
                 <td><font face="Helvetica" color="{GREY}" point-size="11">{target_name}={round(value)}</font></td>
@@ -96,7 +98,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
 
     ranksep = ".22"
     if orientation=="TD":
-        ranksep = ".35"
+        ranksep = ".2"
 
 
     shadow_tree = ShadowDecTree(tree_model, X_train, feature_names=feature_names, class_names=class_names)
@@ -149,17 +151,13 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
             leaves.append( regr_leaf_node(node) )
 
     if orientation=="TD":
-        ldistance = "1.1"
-        rdistance = "1.1"
-        langle = "-28"
-        rangle = "28"
-        port = "label:s"
+        fromport = "img:s"
+        toport = "img:n"
     else:
-        ldistance = "1.3" # not used in LR mode; just label not taillable.
-        rdistance = "1.3"
-        langle = "-90"
-        rangle = "90"
-        port = "img:e"
+        fromport = "img:e"
+        toport = "img:w"
+    llabel = '&lt;' if show_edges else ''
+    rlabel = '&ge;' if show_edges else ''
 
     edges = []
     # non leaf edges with > and <=
@@ -171,8 +169,8 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         right_node_name = node_name(node.right)
         if node.right.isleaf():
             right_node_name ='leaf%d' % node.right.id
-        edges.append( f'{nname}:{port} -> {left_node_name} [labelangle="{langle}" labeldistance="{ldistance}" taillabel=<&lt;>]' )
-        edges.append( f'{nname}:{port} -> {right_node_name} [labelangle="{rangle}" labeldistance="{rdistance}" taillabel=<&ge;>]' )
+        edges.append( f'{nname}:{fromport} -> {left_node_name}:{toport} [label=<{llabel}>]' )
+        edges.append( f'{nname}:{fromport} -> {right_node_name}:{toport} [label=<{rlabel}>]' )
 
     newline = "\n\t"
     st = f"""
@@ -181,7 +179,7 @@ digraph G {{splines=line;
     ranksep={ranksep};
     rankdir={orientation};
     node [margin="0.03" penwidth="0.5" width=.1, height=.1];
-    edge [arrowsize=.4 penwidth="0.5"]
+    edge [arrowsize=.4 penwidth="0.3"]
     
     {newline.join(internal)}
     {newline.join(edges)}
@@ -241,9 +239,9 @@ def regr_split_viz(node : ShadowDecTreeNode,
     left = y[left]
     right = y[right]
     split = node.split()
-    ax.plot([min(X),split],[np.mean(left),np.mean(left)],'--', color=GREY, linewidth=1.3)
-    ax.plot([split,split],[min(y),max(y)],'--', color=GREY, linewidth=1.3)
-    ax.plot([split,max(X)],[np.mean(right),np.mean(right)],'--', color=GREY, linewidth=1.3)
+    ax.plot([min(X),split],[np.mean(left),np.mean(left)],'--', color=GREY, linewidth=1.6)
+    ax.plot([split,split],[min(y),max(y)],'--', color=GREY, linewidth=1.6)
+    ax.plot([split,max(X)],[np.mean(right),np.mean(right)],'--', color=GREY, linewidth=1.6)
 
     plt.tight_layout()
     if filename is not None:
@@ -295,7 +293,8 @@ def boston():
 
     # st = dectreeviz(regr.tree_, data, boston.target)
     st = dtreeviz(regr, data, boston.target, target_name='price',
-                  feature_names=data.columns, orientation="TD")
+                  feature_names=data.columns, orientation="TD",
+                  show_edges=False)
 
     with open("/tmp/t3.dot", "w") as f:
         f.write(st.source)
