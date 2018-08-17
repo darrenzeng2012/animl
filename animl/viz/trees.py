@@ -15,6 +15,7 @@ YELLOW = "#fefecd" # "#fbfbd0" # "#FBFEB0"
 BLUE = "#D9E6F5"
 GREEN = "#cfe2d4"
 DARKBLUE = '#313695'
+LIGHTORANGE = '#fee090'
 
 color_blind_friendly_colors = {
     'redorange': '#f46d43',
@@ -58,10 +59,10 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         # return f'{node_name} [shape=none label=<{html}>]'
         html = f"""<table border="0">
         <tr>
-                <td fixedsize="true" width="140" height="56"><img src="/tmp/node{node.id}.png"/></td>
+                <td port="img" fixedsize="true" width="140" height="45"><img src="/tmp/node{node.id}.png"/></td>
         </tr>
         <tr>
-                <td port="bottom"><font face="Helvetica" color="#444443" point-size="12">{name}@{split}</font></td>
+                <td port="label"><font face="Helvetica" color="#444443" point-size="12">{name}@{split}</font></td>
         </tr>
         </table>"""
         return f'{node_name} [margin="0" shape=none label=<{html}>]'
@@ -74,7 +75,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         # return f'leaf{node.id} [margin="{margin}" style=filled fillcolor="{YELLOW}" shape=circle label=<{html}>]'
         html = f"""<table border="0">
         <tr>
-                <td fixedsize="true" width="27" height="90"><img src="/tmp/node{node.id}.png"/></td>
+                <td fixedsize="true" width="27" height="60"><img src="/tmp/node{node.id}.png"/></td>
         </tr>
         <tr>
                 <td><font face="Helvetica" color="#444443" point-size="12">{target_name}={round(value)}</font></td>
@@ -105,7 +106,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
     n_classes = shadow_tree.nclasses()
     color_values = color_blind_friendly_colors[n_classes]
 
-    figsize = (5, 2)
+    figsize = (5, 1.6)
 
     y_range = (min(y_train)*1.03, max(y_train)*1.03) # same y axis for all
 
@@ -126,7 +127,6 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
     leaves = []
     for node in shadow_tree.leaves:
         regr_leaf_viz(node, y_train, filename=f"/tmp/node{node.id}.png",
-                      target_name="Count",
                       y_range=y_range,
                       figsize=(4,2))
 
@@ -150,6 +150,19 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         else:
             leaves.append( regressor_leaf_node(node) )
 
+    if orientation=="TD":
+        ldistance = "1.1"
+        rdistance = "1.1"
+        langle = "-28"
+        rangle = "28"
+        port = "label:s"
+    else:
+        ldistance = "1.3" # not used in LR mode; just label not taillable.
+        rdistance = "1.3"
+        langle = "-90"
+        rangle = "90"
+        port = "img:e"
+
     edges = []
     # non leaf edges with > and <=
     for node in shadow_tree.internal:
@@ -160,8 +173,8 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         right_node_name = node_name(node.right)
         if node.right.isleaf():
             right_node_name ='leaf%d' % node.right.id
-        edges.append( f'{nname}:bottom:s -> {left_node_name}' )
-        edges.append( f'{nname}:bottom:s -> {right_node_name}' )
+        edges.append( f'{nname}:{port} -> {left_node_name} [labelangle="{langle}" labeldistance="{ldistance}" taillabel=<&lt;>]' )
+        edges.append( f'{nname}:{port} -> {right_node_name} [labelangle="{rangle}" labeldistance="{rdistance}" taillabel=<&ge;>]' )
 
     newline = "\n\t"
     st = f"""
@@ -191,7 +204,8 @@ def regr_split_viz(node : ShadowDecTreeNode,
                    show_ylabel=True,
                    y_range=None,
                    figsize:Tuple[Number,Number]=None,
-                   label_fontsize:int=18):
+                   ticks_fontsize:int=18,
+                   label_fontsize:int=24):
     fig, ax = plt.subplots(1, 1, figsize=figsize)
 
     feature_name = node.feature_name()
@@ -220,7 +234,7 @@ def regr_split_viz(node : ShadowDecTreeNode,
     X = X[:,node.feature()]
     X, y = X[node.samples()], y[node.samples()]
 
-    ax.tick_params(axis='both', which='major', labelsize=label_fontsize)
+    ax.tick_params(axis='both', which='major', labelsize=ticks_fontsize)
 
     ax.scatter(X, y, s=2, c=DARKBLUE, alpha=.8)
     left, right = node.split_samples()
@@ -239,11 +253,10 @@ def regr_split_viz(node : ShadowDecTreeNode,
 
 def regr_leaf_viz(node : ShadowDecTreeNode,
                   y : (pd.Series,np.ndarray),
-                  target_name : str,
                   filename:str=None,
                   y_range=None,
                   figsize:Tuple[Number,Number]=None,
-                  label_fontsize:int=24):
+                  ticks_fontsize:int=24):
     fig, ax = plt.subplots(1, 1, figsize=figsize)
 
     ax.xaxis.set_visible(False)
@@ -254,17 +267,17 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
 
     y = y[node.samples()]
 
-    fig, ax = plt.subplots(1, 1, figsize=(1.5, 5))
+    fig, ax = plt.subplots(1, 1, figsize=(1.35, 3))
     ax.xaxis.set_visible(False)
     ax.set_xticks([])
 
     ax.set_ylim(y_range)
-    ax.tick_params(axis='both', which='major', labelsize=label_fontsize)
+    ax.tick_params(axis='both', which='major', labelsize=ticks_fontsize)
     meanprops = {'linewidth': 1.2, 'linestyle': '-', 'color': 'black'}
     bp = ax.boxplot(y, notch=False, medianprops={'linewidth': 0}, meanprops=meanprops,
-                    widths=[.9], showmeans=True, meanline=True, sym='', patch_artist=True)
+                    widths=[.8], showmeans=True, meanline=True, sym='', patch_artist=True)
     for patch in bp['boxes']:
-        patch.set(facecolor=BLUE)
+        patch.set(facecolor=LIGHTORANGE)
 
     plt.tight_layout()
     if filename is not None:
