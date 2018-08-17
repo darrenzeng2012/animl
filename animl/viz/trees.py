@@ -116,7 +116,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         gr_node = dec_node(node.feature_name(), nname, split=round(node.split()))
         internal.append( gr_node )
 
-        node_split_viz(node, X_train, y_train, filename=f"/tmp/node{node.id}.png",
+        regr_split_viz(node, X_train, y_train, filename=f"/tmp/node{node.id}.png",
                        target_name=target_name,
                        figsize=figsize,
                        y_range=y_range,
@@ -125,10 +125,10 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
 
     leaves = []
     for node in shadow_tree.leaves:
-        leaf_split_viz(node, y_train, filename=f"/tmp/node{node.id}.png",
-                       target_name="Count",
-                       y_range=y_range,
-                       figsize=(4,2))
+        regr_leaf_viz(node, y_train, filename=f"/tmp/node{node.id}.png",
+                      target_name="Count",
+                      y_range=y_range,
+                      figsize=(4,2))
 
         if shadow_tree.isclassifier():
             counts = node.class_counts()
@@ -181,7 +181,7 @@ digraph G {{splines=line;
     return graphviz.Source(st)
 
 
-def node_split_viz(node : ShadowDecTreeNode,
+def regr_split_viz(node : ShadowDecTreeNode,
                    X : (pd.DataFrame,np.ndarray),
                    y : (pd.Series,np.ndarray),
                    target_name : str,
@@ -237,13 +237,13 @@ def node_split_viz(node : ShadowDecTreeNode,
         plt.close()
 
 
-def leaf_split_viz(node : ShadowDecTreeNode,
-                   y : (pd.Series,np.ndarray),
-                   target_name : str,
-                   filename:str=None,
-                   y_range=None,
-                   figsize:Tuple[Number,Number]=None,
-                   label_fontsize:int=24):
+def regr_leaf_viz(node : ShadowDecTreeNode,
+                  y : (pd.Series,np.ndarray),
+                  target_name : str,
+                  filename:str=None,
+                  y_range=None,
+                  figsize:Tuple[Number,Number]=None,
+                  label_fontsize:int=24):
     fig, ax = plt.subplots(1, 1, figsize=figsize)
 
     ax.xaxis.set_visible(False)
@@ -273,7 +273,7 @@ def leaf_split_viz(node : ShadowDecTreeNode,
 
 
 def boston():
-    regr = tree.DecisionTreeRegressor(max_depth=3, random_state=666)
+    regr = tree.DecisionTreeRegressor(max_depth=2, random_state=666)
     boston = load_boston()
 
     data = pd.DataFrame(boston.data)
