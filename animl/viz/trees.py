@@ -77,10 +77,17 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         if fancy:
             html = f"""<table border="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
             <tr>
-                    <td port="img" fixedsize="true" width="18" height="45"><img src="/tmp/node{node.id}.svg"/></td>
+                    <td colspan="3" port="img" fixedsize="true" width="18" height="45"><img src="/tmp/node{node.id}.svg"/></td>
             </tr>
             <tr>
-                    <td><font face="Helvetica" color="{GREY}" point-size="11">{target_name}={round(value)}<br/>n={node.nsamples()}</font></td>
+                    <td cellspacing="0" cellpadding="0" bgcolor="white" align="right" ><font face="Helvetica" color="{GREY}" point-size="11">{target_name}</font></td>
+                    <td cellspacing="0" cellpadding="0"><font point-size="9">=</font></td>
+                    <td cellspacing="0" cellpadding="0" bgcolor="white" align="left"><font face="Helvetica" color="{GREY}" point-size="11">{round(value)}</font></td>
+            </tr>
+            <tr>
+                    <td cellspacing="0" cellpadding="0" bgcolor="white" align="right" ><font face="Helvetica" color="{GREY}" point-size="11">n</font></td>
+                    <td cellspacing="0" cellpadding="0"><font point-size="9"> = </font></td>
+                    <td cellspacing="0" cellpadding="0" bgcolor="white" align="left"><font face="Helvetica" color="{GREY}" point-size="11">{node.nsamples()}</font></td>
             </tr>
             </table>"""
             return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
