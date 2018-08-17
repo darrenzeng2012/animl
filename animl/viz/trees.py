@@ -7,12 +7,14 @@ from sklearn.datasets import load_boston, load_iris
 import string
 import re
 import matplotlib.pyplot as plt
+import seaborn as sns
 from animl.trees import *
 from numbers import Number
 
 YELLOW = "#fefecd" # "#fbfbd0" # "#FBFEB0"
 BLUE = "#D9E6F5"
 GREEN = "#cfe2d4"
+DARKBLUE = '#313695'
 
 color_blind_friendly_colors = {
     'redorange': '#f46d43',
@@ -72,7 +74,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         # return f'leaf{node.id} [margin="{margin}" style=filled fillcolor="{YELLOW}" shape=circle label=<{html}>]'
         html = f"""<table border="0">
         <tr>
-                <td fixedsize="true" width="140" height="56"><img src="/tmp/node{node.id}.png"/></td>
+                <td fixedsize="true" width="27" height="90"><img src="/tmp/node{node.id}.png"/></td>
         </tr>
         <tr>
                 <td><font face="Helvetica" color="#444443" point-size="12">{target_name}={round(value)}</font></td>
@@ -123,13 +125,10 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
 
     leaves = []
     for node in shadow_tree.leaves:
-        node_split_viz(node, X_train, y_train, filename=f"/tmp/node{node.id}.png",
-                       target_name=f"${target_name}_i$",
-                       feature_name=f"$i$",
-                       figsize=figsize,
+        leaf_split_viz(node, y_train, filename=f"/tmp/node{node.id}.png",
+                       target_name="Count",
                        y_range=y_range,
-                       show_ylabel=True,
-                       showx=True)
+                       figsize=(4,2))
 
         if shadow_tree.isclassifier():
             counts = node.class_counts()
@@ -186,7 +185,6 @@ def node_split_viz(node : ShadowDecTreeNode,
                    X : (pd.DataFrame,np.ndarray),
                    y : (pd.Series,np.ndarray),
                    target_name : str,
-                   feature_name : str=None,
                    filename:str=None,
                    showx=True,
                    showy=True,
@@ -196,10 +194,10 @@ def node_split_viz(node : ShadowDecTreeNode,
                    label_fontsize:int=18):
     fig, ax = plt.subplots(1, 1, figsize=figsize)
 
-    fname = feature_name if feature_name is not None else node.feature_name()
+    feature_name = node.feature_name()
     if show_ylabel: showy=True
     if showx:
-        ax.set_xlabel(fname, fontsize=label_fontsize, fontname="Arial")
+        ax.set_xlabel(feature_name, fontsize=label_fontsize, fontname="Arial")
     else:
         ax.xaxis.set_visible(False)
         ax.set_xticks([])
@@ -219,29 +217,60 @@ def node_split_viz(node : ShadowDecTreeNode,
     if isinstance(y,pd.Series):
         y = y.values
 
-    if node.isleaf():
-        X = np.arange(0,len(X))
-    else:
-        X = X[:,node.feature()]
+    X = X[:,node.feature()]
     X, y = X[node.samples()], y[node.samples()]
 
-    ax.scatter(X, y, s=2, c='#0570b0')
+    ax.tick_params(axis='both', which='major', labelsize=label_fontsize)
+
+    ax.scatter(X, y, s=2, c=DARKBLUE, alpha=.8)
     left, right = node.split_samples()
     left = y[left]
     right = y[right]
     split = node.split()
-    if node.isleaf():
-        ax.plot([min(X), max(X)], [np.mean(right), np.mean(right)], '--', color='#444443',
-                linewidth=1.3)
-    else:
-        ax.plot([min(X),split],[np.mean(left),np.mean(left)],'--', color='#444443', linewidth=1.3)
-        ax.plot([split,split],[min(y),max(y)],'--', color='#444443', linewidth=1.3)
-        ax.plot([split,max(X)],[np.mean(right),np.mean(right)],'--', color='#444443', linewidth=1.3)
+    ax.plot([min(X),split],[np.mean(left),np.mean(left)],'--', color='#444443', linewidth=1.3)
+    ax.plot([split,split],[min(y),max(y)],'--', color='#444443', linewidth=1.3)
+    ax.plot([split,max(X)],[np.mean(right),np.mean(right)],'--', color='#444443', linewidth=1.3)
 
     plt.tight_layout()
     if filename is not None:
         plt.savefig(filename, dpi=600, bbox_inches='tight', pad_inches=0)
         plt.close()
+
+
+def leaf_split_viz(node : ShadowDecTreeNode,
+                   y : (pd.Series,np.ndarray),
+                   target_name : str,
+                   filename:str=None,
+                   y_range=None,
+                   figsize:Tuple[Number,Number]=None,
+                   label_fontsize:int=24):
+    fig, ax = plt.subplots(1, 1, figsize=figsize)
+
+    ax.xaxis.set_visible(False)
+    ax.set_xticks([])
+
+    if isinstance(y,pd.Series):
+        y = y.values
+
+    y = y[node.samples()]
+
+    fig, ax = plt.subplots(1, 1, figsize=(1.5, 5))
+    ax.xaxis.set_visible(False)
+    ax.set_xticks([])
+
+    ax.set_ylim(y_range)
+    ax.tick_params(axis='both', which='major', labelsize=label_fontsize)
+    meanprops = {'linewidth': 1.2, 'linestyle': '-', 'color': 'black'}
+    bp = ax.boxplot(y, notch=False, medianprops={'linewidth': 0}, meanprops=meanprops,
+                    widths=[.9], showmeans=True, meanline=True, sym='', patch_artist=True)
+    for patch in bp['boxes']:
+        patch.set(facecolor=BLUE)
+
+    plt.tight_layout()
+    if filename is not None:
+        plt.savefig(filename, dpi=600, bbox_inches='tight', pad_inches=0)
+        plt.close()
+
 
 def boston():
     regr = tree.DecisionTreeRegressor(max_depth=3, random_state=666)
