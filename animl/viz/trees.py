@@ -80,7 +80,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
                     <td port="img" fixedsize="true" width="18" height="45"><img src="/tmp/node{node.id}.svg"/></td>
             </tr>
             <tr>
-                    <td><font face="Helvetica" color="{GREY}" point-size="11">{target_name}={round(value)}</font></td>
+                    <td><font face="Helvetica" color="{GREY}" point-size="11">{target_name}={round(value)}<br/>n={node.nsamples()}</font></td>
             </tr>
             </table>"""
             return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
@@ -301,9 +301,9 @@ def boston():
 
     # st = dectreeviz(regr.tree_, data, boston.target)
     st = dtreeviz(regr, data, boston.target, target_name='price',
-                  feature_names=data.columns, orientation="LR",
+                  feature_names=data.columns, orientation="TD",
                   show_edge_labels=False,
-                  fancy=False)
+                  fancy=True)
 
     with open("/tmp/t3.dot", "w") as f:
         f.write(st.source)
