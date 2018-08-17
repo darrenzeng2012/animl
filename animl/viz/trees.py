@@ -45,7 +45,7 @@ max_class_colors = len(color_blind_friendly_colors)-1
 
 
 def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_names=None,
-             precision=1, orientation="TD", show_edges=False):
+             precision=1, orientation="TD", show_edge_labels=False, fancy=True):
     def round(v,ndigits=precision):
         return format(v, '.' + str(ndigits) + 'f')
 
@@ -57,13 +57,14 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         return node_name
 
     def split_node(name, node_name, split):
-        # html = f"""<font face="Helvetica" color="#444443" point-size="12">{name}<br/>@{split}</font>"""
-        # return f'{node_name} [shape=none label=<{html}>]'
-        html = f"""<table border="0">
-        <tr>
-                <td port="img" fixedsize="true" width="101.25" height="45"><img src="/tmp/node{node.id}.svg"/></td>
-        </tr>
-        </table>"""
+        if fancy:
+            html = f"""<table border="0">
+            <tr>
+                    <td port="img" fixedsize="true" width="101.25" height="45"><img src="/tmp/node{node.id}.svg"/></td>
+            </tr>
+            </table>"""
+        else:
+            html = f"""<font face="Helvetica" color="#444443" point-size="12">{name}@{split}</font>"""
         gr_node = f'{node_name} [margin="0" shape=none label=<{html}>]'
         return gr_node
 
@@ -73,15 +74,20 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         # html = f"""<font face="Helvetica" color="#444443" point-size="11">{round(value)}</font>"""
         # margin = prop_size(node.nsamples())
         # return f'leaf{node.id} [margin="{margin}" style=filled fillcolor="{YELLOW}" shape=circle label=<{html}>]'
-        html = f"""<table border="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
-        <tr>
-                <td port="img" fixedsize="true" width="18" height="45"><img src="/tmp/node{node.id}.svg"/></td>
-        </tr>
-        <tr>
-                <td><font face="Helvetica" color="{GREY}" point-size="11">{target_name}={round(value)}</font></td>
-        </tr>
-        </table>"""
-        return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
+        if fancy:
+            html = f"""<table border="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
+            <tr>
+                    <td port="img" fixedsize="true" width="18" height="45"><img src="/tmp/node{node.id}.svg"/></td>
+            </tr>
+            <tr>
+                    <td><font face="Helvetica" color="{GREY}" point-size="11">{target_name}={round(value)}</font></td>
+            </tr>
+            </table>"""
+            return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
+        else:
+            margin = prop_size(node.nsamples())
+            html = f"""<font face="Helvetica" color="#444443" point-size="11">{round(value)}</font>"""
+            return f'leaf{node.id} [margin="{margin}" style=filled fillcolor="{YELLOW}" shape=circle label=<{html}>]'
 
     def prop_size(n):
         leaf_sample_counts = shadow_tree.leaf_sample_counts()
@@ -150,14 +156,16 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         else:
             leaves.append( regr_leaf_node(node) )
 
-    if orientation=="TD":
-        fromport = "img:s"
-        toport = "img:n"
-    else:
-        fromport = "img:e"
-        toport = "img:w"
-    llabel = '&lt;' if show_edges else ''
-    rlabel = '&ge;' if show_edges else ''
+    fromport = ""
+    toport = ""
+    if fancy and orientation=="TD":
+        fromport = ":img:s"
+        toport = ":img:n"
+    elif fancy:
+        fromport = ":img:e"
+        toport = ":img:w"
+    llabel = '&lt;' if show_edge_labels else ''
+    rlabel = '&ge;' if show_edge_labels else ''
 
     edges = []
     # non leaf edges with > and <=
@@ -169,8 +177,8 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         right_node_name = node_name(node.right)
         if node.right.isleaf():
             right_node_name ='leaf%d' % node.right.id
-        edges.append( f'{nname}:{fromport} -> {left_node_name}:{toport} [label=<{llabel}>]' )
-        edges.append( f'{nname}:{fromport} -> {right_node_name}:{toport} [label=<{rlabel}>]' )
+        edges.append( f'{nname}{fromport} -> {left_node_name}{toport} [label=<{llabel}>]' )
+        edges.append( f'{nname}{fromport} -> {right_node_name}{toport} [label=<{rlabel}>]' )
 
     newline = "\n\t"
     st = f"""
@@ -293,8 +301,9 @@ def boston():
 
     # st = dectreeviz(regr.tree_, data, boston.target)
     st = dtreeviz(regr, data, boston.target, target_name='price',
-                  feature_names=data.columns, orientation="TD",
-                  show_edges=False)
+                  feature_names=data.columns, orientation="LR",
+                  show_edge_labels=False,
+                  fancy=False)
 
     with open("/tmp/t3.dot", "w") as f:
         f.write(st.source)
