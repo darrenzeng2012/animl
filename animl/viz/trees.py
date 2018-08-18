@@ -15,6 +15,7 @@ YELLOW = "#fefecd" # "#fbfbd0" # "#FBFEB0"
 BLUE = "#D9E6F5"
 GREEN = "#cfe2d4"
 DARKBLUE = '#313695'
+DARKGREEN = '#006400'
 LIGHTORANGE = '#fee090'
 GREY = '#444443'
 
@@ -247,22 +248,40 @@ def regr_split_viz(node : ShadowDecTreeNode,
     X = X[:,node.feature()]
     X, y = X[node.samples()], y[node.samples()]
 
-    ax.tick_params(axis='both', which='major', labelsize=ticks_fontsize)
+    if node.isclassifier():
+        fig, ax = plt.subplots(1, 1, figsize=(10,5))
+        ax.yaxis.set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
 
-    ax.scatter(X, y, s=2, c=DARKBLUE, alpha=.8)
-    left, right = node.split_samples()
-    left = y[left]
-    right = y[right]
-    split = node.split()
-    ax.plot([min(X),split],[np.mean(left),np.mean(left)],'--', color=GREY, linewidth=1.6)
-    ax.plot([split,split],[min(y),max(y)],'--', color=GREY, linewidth=1.6)
-    ax.plot([split,max(X)],[np.mean(right),np.mean(right)],'--', color=GREY, linewidth=1.6)
+        n_classes = node.shadowtree.nclasses()
+        X_hist = [X[y==clas] for clas in range(n_classes)]
+
+        split = node.split()
+        binwidth = 0.05
+        hist = ax.hist(X_hist,
+                       color=[DARKBLUE, DARKGREEN,'red'],
+                       bins=np.arange(min(X), max(X) + binwidth , binwidth))
+        ax.set_xticks([split])
+        ax.tick_params(direction='out', length=15, width=10, colors='black', labelsize=40)
+        
+    else:
+        ax.tick_params(axis='both', which='major', labelsize=ticks_fontsize)
+
+        ax.scatter(X, y, s=2, c=DARKBLUE, alpha=.8)
+        left, right = node.split_samples()
+        left = y[left]
+        right = y[right]
+        split = node.split()
+        ax.plot([min(X),split],[np.mean(left),np.mean(left)],'--', color=GREY, linewidth=1.6)
+        ax.plot([split,split],[min(y),max(y)],'--', color=GREY, linewidth=1.6)
+        ax.plot([split,max(X)],[np.mean(right),np.mean(right)],'--', color=GREY, linewidth=1.6)
 
     plt.tight_layout()
     if filename is not None:
         plt.savefig(filename, bbox_inches='tight', pad_inches=0)
         plt.close()
-
 
 def regr_leaf_viz(node : ShadowDecTreeNode,
                   y : (pd.Series,np.ndarray),
@@ -316,28 +335,29 @@ def boston():
         f.write(st.source)
 
     return st
-#
-# def iris():
-#     clf = tree.DecisionTreeClassifier(max_depth=2, random_state=666)
-#     iris = load_iris()
-#
-#     print(iris.data.shape, iris.target.shape)
-#
-#     data = pd.DataFrame(iris.data)
-#     data.columns = iris.feature_names
-#
-#     clf = clf.fit(data, iris.target)
-#
-#     # st = dectreeviz(clf.tree_, data, boston.target)
-#     st = dtreeviz(clf, data, iris.target, orientation="TD", class_names=["setosa", "versicolor", "virginica"])
-#
-#     with open("/tmp/t3.dot", "w") as f:
-#         f.write(st)
-#
-#     print(clf.tree_.value)
-#     return st
-#
-#st = iris()
-st = boston()
+
+def iris():
+    clf = tree.DecisionTreeClassifier(max_depth=2, random_state=666)
+    iris = load_iris()
+
+    print(iris.data.shape, iris.target.shape)
+
+    data = pd.DataFrame(iris.data)
+    data.columns = iris.feature_names
+
+    clf = clf.fit(data, iris.target)
+
+    # st = dectreeviz(clf.tree_, data, boston.target)
+    st = dtreeviz(clf, data, iris.target,target_name='flower',feature_names=data.columns, orientation="TD", class_names=["setosa", "versicolor", "virginica"], fancy=True, show_edge_labels=False)
+    print(st)
+
+    with open("/tmp/t3.dot", "w") as f:
+        f.write(st.source)
+
+    print(clf.tree_.value)
+    return st
+
+st = iris()
+# st = boston()
 st.view()
 #
