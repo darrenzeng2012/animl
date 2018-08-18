@@ -25,6 +25,8 @@ color_blind_friendly_colors = {
     'babyblue': '#abd9e9', 'lightblue': '#74add1', 'blue': '#4575b4'
 }
 
+dark_colors = [DARKBLUE, DARKGREEN, '#a50026', '#fdae61', '#c51b7d', '#fee090']
+
 color_blind_friendly_colors = [
     None, # 0 classes
     None, # 1 class
@@ -131,7 +133,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         gr_node = split_node(node.feature_name(), nname, split=round(node.split()))
         internal.append( gr_node )
 
-        regr_split_viz(node, X_train, y_train, filename=f"/tmp/node{node.id}.svg",
+        split_viz(node, X_train, y_train, filename=f"/tmp/node{node.id}.svg",
                        target_name=target_name,
                        figsize=figsize,
                        y_range=y_range,
@@ -206,7 +208,7 @@ digraph G {{splines=line;
     return graphviz.Source(st)
 
 
-def regr_split_viz(node : ShadowDecTreeNode,
+def split_viz(node : ShadowDecTreeNode,
                    X : (pd.DataFrame,np.ndarray),
                    y : (pd.Series,np.ndarray),
                    target_name : str,
@@ -217,7 +219,7 @@ def regr_split_viz(node : ShadowDecTreeNode,
                    y_range=None,
                    figsize:Tuple[Number,Number]=None,
                    ticks_fontsize:int=18,
-                   label_fontsize:int=24,
+                   label_fontsize:int=34,
                    precision=1):
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     ax.tick_params(colors=GREY)
@@ -249,23 +251,25 @@ def regr_split_viz(node : ShadowDecTreeNode,
     X, y = X[node.samples()], y[node.samples()]
 
     if node.isclassifier():
-        fig, ax = plt.subplots(1, 1, figsize=(10,5))
-        ax.yaxis.set_visible(False)
+        fig, ax = plt.subplots(1, 1, figsize=(15,7))
+        ax.set_xlabel(f"{feature_name}", fontsize=label_fontsize, fontname="Arial",
+                      color=GREY)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_visible(False)
 
         n_classes = node.shadowtree.nclasses()
+        class_names = node.shadowtree.class_names
         X_hist = [X[y==clas] for clas in range(n_classes)]
 
-        split = node.split()
-        binwidth = 0.05
+        binwidth = 0.1
         hist = ax.hist(X_hist,
-                       color=[DARKBLUE, DARKGREEN,'red'],
-                       bins=np.arange(min(X), max(X) + binwidth , binwidth))
-        ax.set_xticks([split])
-        ax.tick_params(direction='out', length=15, width=10, colors='black', labelsize=40)
-        
+                       color=dark_colors[:n_classes],
+                       bins=np.arange(min(X), max(X) + binwidth , binwidth), label=class_names)
+        ax.legend(prop={'size': ticks_fontsize})
+        ax.set_xticks([round(node.split(),precision)])
+        ax.tick_params(direction='out', length=15, width=10, color=GREY, labelsize=40)
+
     else:
         ax.tick_params(axis='both', which='major', labelsize=ticks_fontsize)
 
@@ -348,7 +352,10 @@ def iris():
     clf = clf.fit(data, iris.target)
 
     # st = dectreeviz(clf.tree_, data, boston.target)
-    st = dtreeviz(clf, data, iris.target,target_name='flower',feature_names=data.columns, orientation="TD", class_names=["setosa", "versicolor", "virginica"], fancy=True, show_edge_labels=False)
+    st = dtreeviz(clf, data, iris.target,target_name='flower',
+                  feature_names=data.columns, orientation="TD",
+                  class_names=["setosa", "versicolor", "virginica"],
+                  fancy=True, show_edge_labels=False)
     print(st)
 
     with open("/tmp/t3.dot", "w") as f:
