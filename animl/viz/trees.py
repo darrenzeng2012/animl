@@ -298,7 +298,7 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
 
 
 def boston():
-    regr = tree.DecisionTreeRegressor(max_depth=2, random_state=666)
+    regr = tree.DecisionTreeRegressor(max_depth=3, random_state=666)
     boston = load_boston()
 
     data = pd.DataFrame(boston.data)
