@@ -99,6 +99,24 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
             html = f"""<font face="Helvetica" color="#444443" point-size="11">{round(value)}</font>"""
             return f'leaf{node.id} [margin="{margin}" style=filled fillcolor="{YELLOW}" shape=circle label=<{html}>]'
 
+    def class_leaf_node(node):
+        counts = node.class_counts()
+        predicted_class = np.argmax(counts)
+        predicted = predicted_class
+        if class_names is not None:
+            predicted = class_names[predicted_class]
+        ratios = counts / node.nsamples()  # convert counts to ratios totalling 1.0
+        ratios = [round(r, 3) for r in ratios]
+        color_spec = ["{c};{r}".format(c=color_values[i], r=r) for i, r in
+                      enumerate(ratios)]
+        color_spec = ':'.join(color_spec)
+        if n_classes > max_class_colors:
+            color_spec = YELLOW
+        html = f"""<font face="Helvetica" color="black" point-size="12">{predicted}<br/>&nbsp;</font>"""
+        margin = prop_size(node.nsamples())
+        style = 'wedged' if n_classes <= max_class_colors else 'filled'
+        return f'leaf{node.id} [height=0 width="0.4" margin="{margin}" style={style} fillcolor="{color_spec}" shape=circle label=<{html}>]'
+
     def prop_size(n):
         leaf_sample_counts = shadow_tree.leaf_sample_counts()
         min_samples = min(leaf_sample_counts)
@@ -147,22 +165,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
                       y_range=y_range, precision=precision)
 
         if shadow_tree.isclassifier():
-            counts = node.class_counts()
-            predicted_class = np.argmax(counts)
-            predicted = predicted_class
-            if class_names is not None:
-                predicted = class_names[predicted_class]
-            ratios = counts / node.nsamples()  # convert counts to ratios totalling 1.0
-            ratios = [round(r, 3) for r in ratios]
-            color_spec = ["{c};{r}".format(c=color_values[i], r=r) for i, r in
-                          enumerate(ratios)]
-            color_spec = ':'.join(color_spec)
-            if n_classes > max_class_colors:
-                color_spec = YELLOW
-            html = f"""<font face="Helvetica" color="black" point-size="12">{predicted}<br/>&nbsp;</font>"""
-            margin = prop_size(node.nsamples())
-            style = 'wedged' if n_classes <= max_class_colors else 'filled'
-            leaves.append( f'leaf{node.id} [height=0 width="0.4" margin="{margin}" style={style} fillcolor="{color_spec}" shape=circle label=<{html}>]' )
+            leaves.append( class_leaf_node(node) )
         else:
             leaves.append( regr_leaf_node(node) )
 
