@@ -96,7 +96,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
             return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
         else:
             margin = prop_size(node.nsamples())
-            html = f"""<font face="Helvetica" color="#444443" point-size="11">{round(value)}</font>"""
+            html = f"""<font face="Helvetica" color="#444443" point-size="11">{target_name}<br/>{round(value)}</font>"""
             return f'leaf{node.id} [margin="{margin}" style=filled fillcolor="{YELLOW}" shape=circle label=<{html}>]'
 
     def class_leaf_node(node):
@@ -336,7 +336,7 @@ def boston():
     st = dtreeviz(regr, data, boston.target, target_name='price',
                   feature_names=data.columns, orientation="TD",
                   show_edge_labels=False,
-                  fancy=True)
+                  fancy=False)
 
     with open("/tmp/t3.dot", "w") as f:
         f.write(st.source)
@@ -367,7 +367,7 @@ def iris():
     print(clf.tree_.value)
     return st
 
-st = iris()
-# st = boston()
+#st = iris()
+st = boston()
 st.view()
 #
