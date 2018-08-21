@@ -289,7 +289,8 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
                   y_range=None,
                   precision=1,
                   figsize:Tuple[Number,Number]=(3.0, 3.0),
-                  ticks_fontsize:int=24):
+                  label_fontsize:int=28,
+                  ticks_fontsize: int = 24):
     if isinstance(y,pd.Series):
         y = y.values
 
@@ -298,7 +299,9 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     plt.subplots_adjust(wspace=19)
     axes[0].set_ylim(y_range)
-    axes[0].tick_params(axis='both', which='both', labelsize=ticks_fontsize, colors=GREY)
+    axes[0].tick_params(axis='x', which='both', labelsize=label_fontsize, colors=GREY)
+    axes[0].tick_params(axis='y', which='both', labelsize=ticks_fontsize, colors=GREY)
+    # axes[0].tick_params(axis='both', which='both', labelsize=ticks_fontsize, colors=GREY)
 
     meanprops = {'linewidth': 1.2, 'linestyle': '-', 'color': 'black'}
     bp = axes[0].boxplot(y, labels=[target_name],
@@ -307,11 +310,10 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
     for patch in bp['boxes']:
         patch.set(facecolor=LIGHTBLUE)
 
-    # axes[1].set_xticks([])
-    # axes[1].set_xlabel("n", fontsize=ticks_fontsize)
     axes[1].yaxis.tick_right()
     axes[1].set_ylim(0, 350)
-    axes[1].tick_params(axis='both', which='both', labelsize=ticks_fontsize, colors=GREY)
+    axes[1].tick_params(axis='x', which='both', labelsize=label_fontsize, colors=GREY)
+    axes[1].tick_params(axis='y', which='both', labelsize=ticks_fontsize, colors=GREY)
     axes[1].bar(0, node.nsamples(), color=LIGHTORANGE, tick_label="n")
     axes[1].axhline(node.nsamples(), color=GREY, linewidth=1.2)
 
