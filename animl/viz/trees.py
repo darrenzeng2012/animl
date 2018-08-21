@@ -124,7 +124,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
 
     ranksep = ".22"
     if orientation=="TD":
-        ranksep = ".2"
+        ranksep = ".4"
 
 
     shadow_tree = ShadowDecTree(tree_model, X_train, feature_names=feature_names, class_names=class_names)
@@ -297,7 +297,7 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
     y = y[node.samples()]
 
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
-    plt.subplots_adjust(wspace=19)
+    plt.subplots_adjust(wspace=16)
     axes[0].set_ylim(y_range)
     axes[0].tick_params(axis='x', which='both', labelsize=label_fontsize, colors=GREY)
     axes[0].tick_params(axis='y', which='both', labelsize=ticks_fontsize, colors=GREY)
@@ -324,7 +324,7 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
 
 
 def boston():
-    regr = tree.DecisionTreeRegressor(max_depth=2, random_state=666)
+    regr = tree.DecisionTreeRegressor(max_depth=3, random_state=666)
     boston = load_boston()
 
     data = pd.DataFrame(boston.data)
