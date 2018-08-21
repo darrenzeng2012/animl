@@ -17,6 +17,7 @@ GREEN = "#cfe2d4"
 DARKBLUE = '#313695'
 DARKGREEN = '#006400'
 LIGHTORANGE = '#fee090'
+LIGHTBLUE = '#a6bddb'
 GREY = '#444443'
 
 color_blind_friendly_colors = {
@@ -63,7 +64,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         if fancy:
             html = f"""<table border="0">
             <tr>
-                    <td port="img" fixedsize="true" width="101.25" height="45"><img src="/tmp/node{node.id}.svg"/></td>
+                    <td port="img" fixedsize="true" width="202.5" height="90"><img src="/tmp/node{node.id}.svg"/></td>
             </tr>
             </table>"""
         else:
@@ -74,25 +75,16 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
 
     def regr_leaf_node(node):
         value = node.prediction()
-        # html = f"""<font face="Helvetica" color="#444443" point-size="11">{round(value)}</font>"""
-        # margin = prop_size(node.nsamples())
-        # return f'leaf{node.id} [margin="{margin}" style=filled fillcolor="{YELLOW}" shape=circle label=<{html}>]'
         if fancy:
             html = f"""<table border="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
             <tr>
-                    <td colspan="3" port="img" fixedsize="true" width="18" height="45"><img src="/tmp/node{node.id}.svg"/></td>
-            </tr>
-            <tr>
-                    <td cellspacing="0" cellpadding="0" bgcolor="white" align="right" ><font face="Helvetica" color="{GREY}" point-size="11">{target_name}</font></td>
-                    <td cellspacing="0" cellpadding="0"><font point-size="9">=</font></td>
-                    <td cellspacing="0" cellpadding="0" bgcolor="white" align="left"><font face="Helvetica" color="{GREY}" point-size="11">{round(value)}</font></td>
-            </tr>
-            <tr>
-                    <td cellspacing="0" cellpadding="0" bgcolor="white" align="right" ><font face="Helvetica" color="{GREY}" point-size="11">n</font></td>
-                    <td cellspacing="0" cellpadding="0"><font point-size="9"> = </font></td>
-                    <td cellspacing="0" cellpadding="0" bgcolor="white" align="left"><font face="Helvetica" color="{GREY}" point-size="11">{node.nsamples()}</font></td>
+                    <td colspan="3" port="img" fixedsize="true" width="90" height="90"><img src="/tmp/node{node.id}.svg"/></td>
             </tr>
             </table>"""
+            # this code makes big bubble around leaf:
+            if False:
+                margin = prop_size(node.nsamples())
+                return f'leaf{node.id} [margin="{margin}" style=filled fillcolor="white" shape=circle label=<{html}>]'
             return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
         else:
             margin = prop_size(node.nsamples())
@@ -222,7 +214,7 @@ def split_viz(node : ShadowDecTreeNode,
                    y_range=None,
                    figsize:Tuple[Number,Number]=None,
                    ticks_fontsize:int=18,
-                   label_fontsize:int=34,
+                   label_fontsize:int=20,
                    precision=1):
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     ax.tick_params(colors=GREY)
@@ -276,7 +268,7 @@ def split_viz(node : ShadowDecTreeNode,
     else:
         ax.tick_params(axis='both', which='major', labelsize=ticks_fontsize)
 
-        ax.scatter(X, y, s=2, c=DARKBLUE, alpha=.8)
+        ax.scatter(X, y, s=3, c=LIGHTBLUE, alpha=1.0)
         left, right = node.split_samples()
         left = y[left]
         right = y[right]
@@ -296,26 +288,32 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
                   filename:str=None,
                   y_range=None,
                   precision=1,
-                  figsize:Tuple[Number,Number]=(1.35, 3),
+                  figsize:Tuple[Number,Number]=(3.0, 3.0),
                   ticks_fontsize:int=24):
     if isinstance(y,pd.Series):
         y = y.values
 
     y = y[node.samples()]
 
-    fig, ax = plt.subplots(1, 1, figsize=figsize)
-
-    ax.set_ylim(y_range)
-    ax.tick_params(axis='both', which='both', labelsize=ticks_fontsize, colors=GREY)
-    ax.xaxis.set_visible(False)
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+    plt.subplots_adjust(wspace=19)
+    axes[0].set_ylim(y_range)
+    axes[0].tick_params(axis='both', which='both', labelsize=ticks_fontsize, colors=GREY)
 
     meanprops = {'linewidth': 1.2, 'linestyle': '-', 'color': 'black'}
-    bp = ax.boxplot(y, notch=False, medianprops={'linewidth': 0}, meanprops=meanprops,
-                    widths=[.8], showmeans=True, meanline=True, sym='', patch_artist=True)
-    # xtick = plt.setp(ax, xticklabels=[f"{target_name}={round(node.split(),precision)}"])
-    # plt.setp(xtick, fontsize=ticks_fontsize)
+    bp = axes[0].boxplot(y, labels=[target_name],
+                        notch=False, medianprops={'linewidth': 0}, meanprops=meanprops,
+                        widths=[.8], showmeans=True, meanline=True, sym='', patch_artist=True)
     for patch in bp['boxes']:
-        patch.set(facecolor=LIGHTORANGE)
+        patch.set(facecolor=LIGHTBLUE)
+
+    # axes[1].set_xticks([])
+    # axes[1].set_xlabel("n", fontsize=ticks_fontsize)
+    axes[1].yaxis.tick_right()
+    axes[1].set_ylim(0, 350)
+    axes[1].tick_params(axis='both', which='both', labelsize=ticks_fontsize, colors=GREY)
+    axes[1].bar(0, node.nsamples(), color=LIGHTORANGE, tick_label="n")
+    axes[1].axhline(node.nsamples(), color=GREY, linewidth=1.2)
 
     plt.tight_layout()
     if filename is not None:
@@ -324,7 +322,7 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
 
 
 def boston():
-    regr = tree.DecisionTreeRegressor(max_depth=3, random_state=666)
+    regr = tree.DecisionTreeRegressor(max_depth=2, random_state=666)
     boston = load_boston()
 
     data = pd.DataFrame(boston.data)
@@ -336,7 +334,7 @@ def boston():
     st = dtreeviz(regr, data, boston.target, target_name='price',
                   feature_names=data.columns, orientation="TD",
                   show_edge_labels=False,
-                  fancy=False)
+                  fancy=True)
 
     with open("/tmp/t3.dot", "w") as f:
         f.write(st.source)
