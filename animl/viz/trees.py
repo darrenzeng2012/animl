@@ -78,7 +78,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         if fancy:
             html = f"""<table border="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
             <tr>
-                    <td colspan="3" port="img" fixedsize="true" width="90" height="90"><img src="/tmp/node{node.id}.svg"/></td>
+                    <td colspan="3" port="img" fixedsize="true" width="87" height="90"><img src="/tmp/node{node.id}.svg"/></td>
             </tr>
             </table>"""
             # this code makes big bubble around leaf:
@@ -288,7 +288,7 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
                   filename:str=None,
                   y_range=None,
                   precision=1,
-                  figsize:Tuple[Number,Number]=(3.0, 3.0),
+                  figsize:Tuple[Number,Number]=(2.9, 3.0),
                   label_fontsize:int=28,
                   ticks_fontsize: int = 24):
     if isinstance(y,pd.Series):
@@ -297,7 +297,7 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
     y = y[node.samples()]
 
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
-    plt.subplots_adjust(wspace=16)
+    plt.subplots_adjust(wspace=5)
     axes[0].set_ylim(y_range)
     axes[0].tick_params(axis='x', which='both', labelsize=label_fontsize, colors=GREY)
     axes[0].tick_params(axis='y', which='both', labelsize=ticks_fontsize, colors=GREY)
