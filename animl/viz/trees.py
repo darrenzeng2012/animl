@@ -20,33 +20,23 @@ LIGHTORANGE = '#fee090'
 LIGHTBLUE = '#a6bddb'
 GREY = '#444443'
 
-color_blind_friendly_colors = {
-    'redorange': '#f46d43',
-    'orange': '#fdae61', 'yellow': '#fee090', 'sky': '#e0f3f8',
-    'babyblue': '#abd9e9', 'lightblue': '#74add1', 'blue': '#4575b4'
-}
-
-dark_colors = [DARKBLUE, DARKGREEN, '#a50026', '#fdae61', '#c51b7d', '#fee090']
+#dark_colors = [DARKBLUE, DARKGREEN, '#a50026', '#fdae61', '#c51b7d', '#fee090']
 
 color_blind_friendly_colors = [
     None, # 0 classes
     None, # 1 class
-    [YELLOW,BLUE], # 2 classes
-    [YELLOW,BLUE,GREEN], # 3 classes
-    [YELLOW,BLUE,GREEN,'#a1dab4'], # 4
-    [YELLOW,BLUE,GREEN,'#a1dab4','#41b6c4'], # 5
-    [YELLOW,'#c7e9b4','#7fcdbb','#41b6c4','#2c7fb8','#253494'], # 6
-    [YELLOW,'#c7e9b4','#7fcdbb','#41b6c4','#1d91c0','#225ea8','#0c2c84'], # 7
-    [YELLOW,'#edf8b1','#c7e9b4','#7fcdbb','#41b6c4','#1d91c0','#225ea8','#0c2c84'], # 8
-    [YELLOW,'#ece7f2','#d0d1e6','#a6bddb','#74a9cf','#3690c0','#0570b0','#045a8d','#023858'], # 9
-    [YELLOW,'#e0f3f8','#313695','#fee090','#4575b4','#fdae61','#abd9e9','#74add1','#d73027','#f46d43'] # 10
+    ["#fefecd","#D9E6F5"], # 2 classes
+    ["#fefecd","#D9E6F5",'#a1dab4'], # 3 classes
+    ["#fefecd","#D9E6F5",'#a1dab4','#fee090'], # 4
+    ["#fefecd","#D9E6F5",'#a1dab4','#41b6c4','#fee090'], # 5
+    ["#fefecd",'#c7e9b4','#41b6c4','#2c7fb8','#fee090','#f46d43'], # 6
+    ["#fefecd",'#c7e9b4','#7fcdbb','#41b6c4','#1d91c0','#225ea8','#fdae61'], # 7
+    ["#fefecd",'#edf8b1','#c7e9b4','#7fcdbb','#41b6c4','#1d91c0','#225ea8','#fdae61'], # 8
+    ["#fefecd",'#ece7f2','#d0d1e6','#a6bddb','#74a9cf','#3690c0','#0570b0','#045a8d','#fdae61'], # 9
+    ["#fefecd",'#e0f3f8','#313695','#fee090','#4575b4','#fdae61','#abd9e9','#74add1','#f46d43','#d73027'] # 10
 ]
 
-# for x in color_blind_friendly_colors[2:]:
-#     print(x)
-
 max_class_colors = len(color_blind_friendly_colors)-1
-
 
 def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_names=None,
              precision=1, orientation="TD", show_edge_labels=False, fancy=True):
@@ -83,11 +73,13 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
             </table>"""
             # this code makes big bubble around leaf:
             if False:
-                margin = prop_size(node.nsamples())
+                margin = prop_size(node.nsamples(),
+                                   counts=shadow_tree.leaf_sample_counts())
                 return f'leaf{node.id} [margin="{margin}" style=filled fillcolor="white" shape=circle label=<{html}>]'
             return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
         else:
-            margin = prop_size(node.nsamples())
+            margin = prop_size(node.nsamples(),
+                               counts=shadow_tree.leaf_sample_counts())
             html = f"""<font face="Helvetica" color="#444443" point-size="11">{target_name}<br/>{round(value)}</font>"""
             return f'leaf{node.id} [margin="{margin}" style=filled fillcolor="{YELLOW}" shape=circle label=<{html}>]'
 
@@ -105,22 +97,9 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         if n_classes > max_class_colors:
             color_spec = YELLOW
         html = f"""<font face="Helvetica" color="black" point-size="12">{predicted}<br/>&nbsp;</font>"""
-        margin = prop_size(node.nsamples())
+        margin = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts())
         style = 'wedged' if n_classes <= max_class_colors else 'filled'
         return f'leaf{node.id} [height=0 width="0.4" margin="{margin}" style={style} fillcolor="{color_spec}" shape=circle label=<{html}>]'
-
-    def prop_size(n):
-        leaf_sample_counts = shadow_tree.leaf_sample_counts()
-        min_samples = min(leaf_sample_counts)
-        max_samples = max(leaf_sample_counts)
-        sample_count_range = max_samples - min_samples
-
-        margin_range = (0.00, 0.3)
-        if sample_count_range>0:
-            zero_to_one = (n - min_samples) / sample_count_range
-            return zero_to_one * (margin_range[1] - margin_range[0]) + margin_range[0]
-        else:
-            return margin_range[0]
 
     ranksep = ".22"
     if orientation=="TD":
@@ -245,8 +224,10 @@ def split_viz(node : ShadowDecTreeNode,
     X = X[:,node.feature()]
     X, y = X[node.samples()], y[node.samples()]
 
+    class_values = np.unique(y)
+
     if node.isclassifier():
-        fig, ax = plt.subplots(1, 1, figsize=(15,7))
+        fig, ax = plt.subplots(1, 1, figsize=(7.5,3.5))
         ax.set_xlabel(f"{feature_name}", fontsize=label_fontsize, fontname="Arial",
                       color=GREY)
         ax.spines['top'].set_visible(False)
@@ -254,17 +235,33 @@ def split_viz(node : ShadowDecTreeNode,
         ax.spines['left'].set_visible(False)
 
         n_classes = node.shadowtree.nclasses()
-        class_names = node.shadowtree.class_names
-        X_hist = [X[y==clas] for clas in range(n_classes)]
+        class_names = node.shadowtree.class_names()
 
-        binwidth = 0.1
-        hist = ax.hist(X_hist,
-                       color=dark_colors[:n_classes],
-                       bins=np.arange(min(X), max(X) + binwidth , binwidth), label=class_names)
-        ax.legend(prop={'size': ticks_fontsize})
+        X_hist = [X[y==cl] for cl in class_values]
+        class_counts = [len(x) for x in X_hist]
+        hist, bins, barcontainers = ax.hist(X_hist,
+                                            color=color_blind_friendly_colors[len(X_hist)],
+                                            label=class_names)
+        foo = []
+        for i,c in enumerate(class_values):
+            size = prop_size(c, class_counts, output_range=(100,500))
+            sc = plt.scatter([], [], s=size,
+                             edgecolors='black',
+                             linewidth=1.2,
+                             c=color_blind_friendly_colors[n_classes][i],
+                             label=class_names[i])
+            foo.append(sc)
+        leg = ax.legend(handles=foo,
+                        prop={'size': ticks_fontsize},
+                        frameon=True,
+                        edgecolor=GREY,
+                        title='Target')
         ax.set_xticks([round(node.split(),precision)])
-        ax.tick_params(direction='out', length=15, width=10, color=GREY, labelsize=40)
-
+        ax.tick_params(direction='out', length=15, width=10, color=GREY, labelsize=label_fontsize)
+        for patch in barcontainers:
+            for rect in patch.patches:
+                rect.set_linewidth(1.2)
+                rect.set_edgecolor(GREY)
     else:
         ax.tick_params(axis='both', which='major', labelsize=ticks_fontsize)
 
@@ -323,6 +320,19 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
         plt.close()
 
 
+def prop_size(n, counts, output_range = (0.00, 0.3)):
+    min_samples = min(counts)
+    max_samples = max(counts)
+    sample_count_range = max_samples - min_samples
+
+
+    if sample_count_range>0:
+        zero_to_one = (n - min_samples) / sample_count_range
+        return zero_to_one * (output_range[1] - output_range[0]) + output_range[0]
+    else:
+        return output_range[0]
+
+
 def boston():
     regr = tree.DecisionTreeRegressor(max_depth=3, random_state=666)
     boston = load_boston()
@@ -357,7 +367,7 @@ def iris():
     # st = dectreeviz(clf.tree_, data, boston.target)
     st = dtreeviz(clf, data, iris.target,target_name='flower',
                   feature_names=data.columns, orientation="TD",
-                  class_names=["setosa", "versicolor", "virginica"],
+                  class_names=[None,"setosa", "versicolor", "virginica"], # 1,2,3 targets
                   fancy=True, show_edge_labels=False)
     print(st)
 
@@ -367,7 +377,7 @@ def iris():
     print(clf.tree_.value)
     return st
 
-#st = iris()
-st = boston()
+st = iris()
+#st = boston()
 st.view()
 #

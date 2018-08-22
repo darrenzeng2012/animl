@@ -28,10 +28,12 @@ class ShadowDecTree:
 
     Field root is the shadow tree root.
     """
-    def __init__(self, tree_model, X_train, feature_names, class_names=None):
+    def __init__(self, tree_model, X_train,
+                 feature_names : List[str],
+                 class_names : (List[str],Mapping[int,str])=None):
         self.tree_model = tree_model
         self.feature_names = feature_names
-        self.class_names = class_names
+        self._class_names = class_names
         if isinstance(X_train, pd.DataFrame):
             X_train = X_train.values
         self.X_train = X_train
@@ -75,6 +77,16 @@ class ShadowDecTree:
 
     def isclassifier(self):
         return self.tree_model.tree_.n_classes > 1
+
+    def class_name(self, target_value : int):
+        return self._class_names[target_value] # _class_names is either dict or list
+
+    def class_names(self):
+        if isinstance(self._class_names, dict):
+            # sort by the class value (not name)
+            sorted_by_key = sorted(self._class_names.items(), key=lambda x: x[0])
+            return [self._class_names[key] for key in sorted_by_key]
+        return [n for n in self._class_names if n is not None]
 
     @staticmethod
     def node_samples(tree_model, data) -> Mapping[int, list]:
