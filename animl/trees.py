@@ -27,8 +27,14 @@ class ShadowDecTree:
     shadow non-leaf nodes.
 
     Field root is the shadow tree root.
+
+    Parameters
+    ----------
+    class_names : (List[str],Mapping[int,str])
     """
-    def __init__(self, tree_model, X_train,
+    def __init__(self, tree_model,
+                 X_train,
+                 y_train,
                  feature_names : List[str],
                  class_names : (List[str],Mapping[int,str])=None):
         self.tree_model = tree_model
@@ -37,6 +43,10 @@ class ShadowDecTree:
         if isinstance(X_train, pd.DataFrame):
             X_train = X_train.values
         self.X_train = X_train
+        if isinstance(y_train, pd.Series):
+            y_train = y_train.values
+        self.y_train = y_train
+        self.unique_target_values = np.unique(y_train)
         self.node_to_samples = ShadowDecTree.node_samples(tree_model, X_train)
 
         tree = tree_model.tree_
@@ -82,11 +92,18 @@ class ShadowDecTree:
         return self._class_names[target_value] # _class_names is either dict or list
 
     def class_names(self):
+        "Return dict mapping target value to target name"
+        if isinstance(self._class_names, dict):
+            return self._class_names
+        return {i:n for i,n in enumerate(self._class_names)}
+
+    def class_names_list(self):
+        "Return a˚ list of target class names where the target value is the name index"
         if isinstance(self._class_names, dict):
             # sort by the class value (not name)
             sorted_by_key = sorted(self._class_names.items(), key=lambda x: x[0])
             return [self._class_names[key] for key in sorted_by_key]
-        return [n for n in self._class_names if n is not None]
+        return self._class_names
 
     @staticmethod
     def node_samples(tree_model, data) -> Mapping[int, list]:

@@ -106,7 +106,8 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         ranksep = ".4"
 
 
-    shadow_tree = ShadowDecTree(tree_model, X_train, feature_names=feature_names, class_names=class_names)
+    shadow_tree = ShadowDecTree(tree_model, X_train, y_train,
+                                feature_names=feature_names, class_names=class_names)
 
     n_classes = shadow_tree.nclasses()
     color_values = color_blind_friendly_colors[n_classes]
