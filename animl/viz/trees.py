@@ -254,6 +254,7 @@ def split_viz(node : ShadowDecTreeNode,
         leg = ax.legend(handles=foo,
                         prop={'size': ticks_fontsize},
                         frameon=True,
+                        bbox_to_anchor=(1.25, 1.25),
                         edgecolor=GREY,
                         title='Target')
         ax.set_xticks([round(node.split(),precision)])
@@ -354,7 +355,7 @@ def boston():
     return st
 
 def iris():
-    clf = tree.DecisionTreeClassifier(max_depth=2, random_state=666)
+    clf = tree.DecisionTreeClassifier(max_depth=3, random_state=666)
     iris = load_iris()
 
     print(iris.data.shape, iris.target.shape)
