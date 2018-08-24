@@ -86,17 +86,20 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         predicted = predicted_class
         if class_names is not None:
             predicted = class_names[predicted_class]
+        n_nonzero = np.count_nonzero(counts)
         ratios = counts / node.nsamples()  # convert counts to ratios totalling 1.0
         ratios = [round(r, 3) for r in ratios]
         color_spec = ["{c};{r}".format(c=color_values[i], r=r) for i, r in
                       enumerate(ratios)]
         color_spec = ':'.join(color_spec)
         if n_classes > max_class_colors:
-            color_spec = YELLOW
-        html = f"""<font face="Helvetica" color="black" point-size="12">{predicted}<br/>&nbsp;</font>"""
-        margin = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts())
-        style = 'wedged' if n_classes <= max_class_colors else 'filled'
-        return f'leaf{node.id} [height=0 width="0.4" margin="{margin}" style={style} fillcolor="{color_spec}" shape=circle label=<{html}>]'
+            color_spec = LIGHTBLUE
+        if n_nonzero==1: # make pure
+            i = np.nonzero(counts)[0][0]
+            color_spec = color_values[i]
+        width = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts(), output_range=(.25,.8))
+        style = 'wedged' if n_classes <= max_class_colors and n_nonzero>1 else 'filled'
+        return f'leaf{node.id} [width="{width}" style={style} fillcolor="{color_spec}" shape=circle label=""]'
 
     def class_legend_html():
         elements = []
@@ -188,6 +191,12 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
             right_node_name ='leaf%d' % node.right.id
         edges.append( f'{nname}{fromport} -> {left_node_name}{toport} [label=<{llabel}>]' )
         edges.append( f'{nname}{fromport} -> {right_node_name}{toport} [label=<{rlabel}>]' )
+        edges.append(f"""
+        {{
+            rank=same;
+            {left_node_name} -> {right_node_name} [style=invis]
+        }}
+        """)
 
     newline = "\n\t"
     st = f"""
@@ -273,8 +282,11 @@ def split_viz(node: ShadowDecTreeNode,
         X_hist = [X[y==cl] for cl in class_values]
         X_colors = [colors[cl] for cl in class_values]
         class_counts = [len(x) for x in X_hist]
+        binwidth = .3
         hist, bins, barcontainers = ax.hist(X_hist,
                                             color=X_colors,
+                                            bins=np.arange(min(X),
+                                                           max(X) + binwidth, binwidth),
                                             label=class_names)
 
         ax.set_xticks([round(node.split(),precision)])
@@ -437,7 +449,7 @@ def boston():
     return st
 
 def iris():
-    clf = tree.DecisionTreeClassifier(max_depth=3, random_state=666)
+    clf = tree.DecisionTreeClassifier(max_depth=4, random_state=666)
     iris = load_iris()
 
     #print(iris.data.shape, iris.target.shape)
@@ -451,7 +463,7 @@ def iris():
     st = dtreeviz(clf, data, iris.target,target_name='variety',
                   feature_names=data.columns, orientation="TD",
                   class_names=["setosa", "versicolor", "virginica"], # 0,1,2 targets
-                  fancy=True, show_edge_labels=False)
+                  fancy=True, show_edge_labels=True)
     #print(st)
 
     with open("/tmp/t3.dot", "w") as f:

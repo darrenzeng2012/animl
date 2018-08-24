@@ -208,7 +208,7 @@ class ShadowDecTreeNode:
         associated with each class.
         """
         if self.isclassifier():
-            return np.array(self.shadowtree.tree_model.tree_.value[self.id][0])
+            return np.array(self.shadowtree.tree_model.tree_.value[self.id][0], dtype=int)
         return None
 
     def __str__(self):
