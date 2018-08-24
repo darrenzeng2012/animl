@@ -73,11 +73,6 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
                     <td colspan="3" port="img" fixedsize="true" width="87" height="90"><img src="/tmp/node{node.id}.svg"/></td>
             </tr>
             </table>"""
-            # this code makes big bubble around leaf:
-            if False:
-                margin = prop_size(node.nsamples(),
-                                   counts=shadow_tree.leaf_sample_counts())
-                return f'leaf{node.id} [margin="{margin}" style=filled fillcolor="white" shape=circle label=<{html}>]'
             return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
         else:
             margin = prop_size(node.nsamples(),
