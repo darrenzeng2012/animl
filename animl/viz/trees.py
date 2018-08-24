@@ -103,6 +103,25 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         style = 'wedged' if n_classes <= max_class_colors else 'filled'
         return f'leaf{node.id} [height=0 width="0.4" margin="{margin}" style={style} fillcolor="{color_spec}" shape=circle label=<{html}>]'
 
+    def class_legend_html():
+        elements = []
+        for i,cl in enumerate(class_values):
+            html = f"""
+            <tr>
+                <td border="0" cellspacing="0" cellpadding="0"><img src="/tmp/legend{i}.svg"/></td>
+                <td align="left"><font face="Helvetica" color="black" point-size="12">{class_names[cl]}</font></td>
+            </tr>
+            """
+            elements.append(html)
+        return f"""
+        <table border="0" cellspacing="0" cellpadding="0">
+        <tr>
+            <td border="0" colspan="2"><font face="Helvetica" color="{GREY}" point-size="12">{target_name}</font></td>
+        </tr>
+        {''.join(elements)}
+        </table>
+        """
+
     ranksep = ".22"
     if orientation=="TD":
         ranksep = ".4"
@@ -191,20 +210,7 @@ digraph G {{splines=line;
     subgraph cluster_legend {{
         style=invis;
         legend [penwidth="0.3" margin="0" shape=box margin="0.03" width=.1, height=.1 label=<
-        <table border="0" cellspacing="0" cellpadding="0">
-        <tr>
-            <td border="0" colspan="2"><font face="Helvetica" color="{GREY}" point-size="12">Targets</font></td>
-        </tr>
-        <tr>
-            <td border="0" cellspacing="0" cellpadding="0"><img src="/tmp/legend0.svg"/></td><td><font face="Helvetica" color="black" point-size="12">foo</font></td>
-        </tr>
-        <tr>
-            <td border="0" cellspacing="0" cellpadding="0"><img src="/tmp/legend1.svg"/></td><td><font face="Helvetica" color="black" point-size="12">foo</font></td>
-        </tr>
-        <tr>
-            <td border="0" cellspacing="0" cellpadding="0"><img src="/tmp/legend2.svg"/></td><td><font face="Helvetica" color="black" point-size="12">foo</font></td>
-        </tr>
-        </table>
+        {class_legend_html()}
         >]
     }}
 }}
@@ -345,7 +351,6 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
 def draw_legend_boxes(shadow_tree, basefilename):
     n_classes = shadow_tree.nclasses()
     class_values = shadow_tree.unique_target_values
-    class_names = shadow_tree.class_names
     color_values = color_blind_friendly_colors[n_classes]
     colors = {v:color_values[i] for i,v in enumerate(class_values)}
 
@@ -354,6 +359,7 @@ def draw_legend_boxes(shadow_tree, basefilename):
 
 
 def draw_legend(shadow_tree, filename):
+    "Unused since we can't get accurate size measurement for HTML label on node."
     fig, ax = plt.subplots(1, 1, figsize=(.1,.1))
     boxes = []
 
@@ -447,7 +453,7 @@ def iris():
     clf = clf.fit(data, iris.target)
 
     # st = dectreeviz(clf.tree_, data, boston.target)
-    st = dtreeviz(clf, data, iris.target,target_name='flower',
+    st = dtreeviz(clf, data, iris.target,target_name='variety',
                   feature_names=data.columns, orientation="TD",
                   class_names=["setosa", "versicolor", "virginica"], # 0,1,2 targets
                   fancy=True, show_edge_labels=False)
