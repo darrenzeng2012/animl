@@ -390,7 +390,7 @@ def draw_legend(shadow_tree, filename):
 
 
 def draw_colored_box(color,filename):
-    fig, ax = plt.subplots(1, 1, figsize=(1, .6))
+    fig, ax = plt.subplots(1, 1, figsize=(.65, .5))
 
     box1 = patches.Rectangle((0, 0), 2, 1, linewidth=1.2, edgecolor='grey',
                              facecolor=color)
