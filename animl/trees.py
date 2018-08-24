@@ -43,12 +43,13 @@ class ShadowDecTree:
         self.tree_model = tree_model
         self.feature_names = feature_names
         self.class_names = class_names
-        if isinstance(self.class_names, dict):
-            self.class_names = self.class_names
-        elif isinstance(self.class_names, Sequence):
-            self.class_names = {i:n for i, n in enumerate(self.class_names)}
-        else:
-            raise("class_names must be dict or sequence")
+        if tree_model.tree_.n_classes > 1:
+            if isinstance(self.class_names, dict):
+                self.class_names = self.class_names
+            elif isinstance(self.class_names, Sequence):
+                self.class_names = {i:n for i, n in enumerate(self.class_names)}
+            else:
+                raise Exception(f"class_names must be dict or sequence, not {self.class_names.__class__.__name__}")
 
         if isinstance(X_train, pd.DataFrame):
             X_train = X_train.values
