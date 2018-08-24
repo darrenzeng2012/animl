@@ -109,14 +109,14 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
             html = f"""
             <tr>
                 <td border="0" cellspacing="0" cellpadding="0"><img src="/tmp/legend{i}.svg"/></td>
-                <td align="left"><font face="Helvetica" color="black" point-size="12">{class_names[cl]}</font></td>
+                <td align="left"><font face="Helvetica" color="{GREY}" point-size="12">{class_names[cl]}</font></td>
             </tr>
             """
             elements.append(html)
         return f"""
         <table border="0" cellspacing="0" cellpadding="0">
         <tr>
-            <td border="0" colspan="2"><font face="Helvetica" color="{GREY}" point-size="12">{target_name}</font></td>
+            <td border="0" colspan="2"><font face="Helvetica" color="{GREY}" point-size="12"><b>{target_name}</b></font></td>
         </tr>
         {''.join(elements)}
         </table>
