@@ -383,7 +383,7 @@ def class_split_viz(node: ShadowDecTreeNode,
                     label_fontsize: int = 20,
                     precision=1):
     fig, ax = plt.subplots(1, 1, figsize=(7.5, 3.5))
-    ax.set_xlabel(f"{feature_name}, split={node.split()}", fontsize=label_fontsize, fontname="Arial",
+    ax.set_xlabel(f"{feature_name}, split={round(node.split(),1)}", fontsize=label_fontsize, fontname="Arial",
                   color=GREY)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -414,6 +414,19 @@ def class_split_viz(node: ShadowDecTreeNode,
     #ax.set_xticks(np.arange(*feature_range), (feature_range[1]-feature_range[0])/10.0)
     #ax.tick_params(direction='out', length=15, width=10, color=GREY, labelsize=label_fontsize)
     ax.tick_params(color=GREY, labelsize=label_fontsize)
+
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
+    xr = xmax-xmin
+    yr = ymax-ymin
+    th = yr*.05
+    tw = xr*.02
+    tria = np.array([[node.split(), 0], [node.split() - tw, -th], [node.split() + tw, -th]])
+    t = patches.Polygon(tria, linewidth=1.2, edgecolor='orange',
+                        facecolor='orange', label='foo')
+    t.set_clip_on(False)
+    ax.add_patch(t)
+
 
     # Alter appearance of each bar
     for patch in barcontainers:
