@@ -668,8 +668,32 @@ def wine():
     #print(clf.tree_.value)
     return st
 
+def breast_cancer():
+    clf = tree.DecisionTreeClassifier(max_depth=4, random_state=666)
+    cancer = load_breast_cancer()
+
+    #print(iris.data.shape, iris.target.shape)
+
+    data = pd.DataFrame(cancer.data)
+    data.columns = cancer.feature_names
+
+    clf = clf.fit(data, cancer.target)
+
+    st = dtreeviz(clf, data, cancer.target,target_name='cancer',
+                  feature_names=data.columns, orientation="TD",
+                  class_names=list(cancer.target_names),
+                  fancy=True, show_edge_labels=True)
+    #print(st)
+
+    with open("/tmp/t3.dot", "w") as f:
+        f.write(st.source)
+
+    #print(clf.tree_.value)
+    return st
+
 #st = iris()
-st = wine()
+#st = wine()
+st = breast_cancer()
 #st = digits()
 # st = boston()
 st.view()
