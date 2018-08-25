@@ -405,7 +405,7 @@ def class_split_viz(node: ShadowDecTreeNode,
 
     hist, bins, barcontainers = ax.hist(X_hist_non0,
                                         color=X_colors,
-                                        align='left',
+                                        align='mid',
                                         # bins=bins,
                                         bins=np.arange(overall_feature_range[0],overall_feature_range[1] + binwidth, binwidth),
                                         label=class_names)
