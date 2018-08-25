@@ -6,7 +6,7 @@ import pandas as pd
 import math
 from sklearn import tree
 from sklearn.datasets import load_boston, load_iris
-from collections import defaultdict
+from collections import defaultdict, Sequence
 import string
 import re
 from typing import Mapping, List, Tuple
@@ -30,7 +30,10 @@ class ShadowDecTree:
 
     Parameters
     ----------
-    class_names : (List[str],Mapping[int,str])
+    class_names : (List[str],Mapping[int,str]). A mappingf rom target value
+                  to target class name. If you pass in a list of strings,
+                  target value i must be associated with class name[i]. You
+                  can also pass in a dict that maps value to name.
     """
     def __init__(self, tree_model,
                  X_train,
@@ -39,7 +42,15 @@ class ShadowDecTree:
                  class_names : (List[str],Mapping[int,str])=None):
         self.tree_model = tree_model
         self.feature_names = feature_names
-        self._class_names = class_names
+        self.class_names = class_names
+        if tree_model.tree_.n_classes > 1:
+            if isinstance(self.class_names, dict):
+                self.class_names = self.class_names
+            elif isinstance(self.class_names, Sequence):
+                self.class_names = {i:n for i, n in enumerate(self.class_names)}
+            else:
+                raise Exception(f"class_names must be dict or sequence, not {self.class_names.__class__.__name__}")
+
         if isinstance(X_train, pd.DataFrame):
             X_train = X_train.values
         self.X_train = X_train
@@ -87,23 +98,6 @@ class ShadowDecTree:
 
     def isclassifier(self):
         return self.tree_model.tree_.n_classes > 1
-
-    def class_name(self, target_value : int):
-        return self._class_names[target_value] # _class_names is either dict or list
-
-    def class_names(self):
-        "Return dict mapping target value to target name"
-        if isinstance(self._class_names, dict):
-            return self._class_names
-        return {i:n for i,n in enumerate(self._class_names)}
-
-    def class_names_list(self):
-        "Return a˚ list of target class names where the target value is the name index"
-        if isinstance(self._class_names, dict):
-            # sort by the class value (not name)
-            sorted_by_key = sorted(self._class_names.items(), key=lambda x: x[0])
-            return [self._class_names[key] for key in sorted_by_key]
-        return self._class_names
 
     @staticmethod
     def node_samples(tree_model, data) -> Mapping[int, list]:
@@ -215,7 +209,7 @@ class ShadowDecTreeNode:
         associated with each class.
         """
         if self.isclassifier():
-            return np.array(self.shadowtree.tree_model.tree_.value[self.id][0])
+            return np.array(self.shadowtree.tree_model.tree_.value[self.id][0], dtype=int)
         return None
 
     def __str__(self):
