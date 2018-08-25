@@ -364,8 +364,8 @@ def kde_class_split_viz(node: ShadowDecTreeNode,
     th = yr*.05
     tw = xr*.02
     tria = np.array([[splitval, 0], [splitval - tw, -th], [splitval + tw, -th]])
-    t = patches.Polygon(tria, linewidth=1.2, edgecolor='orange',
-                        facecolor='orange', label='foo')
+    t = patches.Polygon(tria, linewidth=1.2, edgecolor=GREY,
+                        facecolor=GREY)
     t.set_clip_on(False)
     ax.add_patch(t)
     plt.ylim(0.0, ymax)
@@ -411,6 +411,7 @@ def class_split_viz(node: ShadowDecTreeNode,
                                         label=class_names)
 
     ax.set_xlim(*overall_feature_range)
+    ax.set_xticks(overall_feature_range)
     #ax.set_xticks(np.arange(*feature_range), (feature_range[1]-feature_range[0])/10.0)
     #ax.tick_params(direction='out', length=15, width=10, color=GREY, labelsize=label_fontsize)
     ax.tick_params(color=GREY, labelsize=label_fontsize)
@@ -419,7 +420,7 @@ def class_split_viz(node: ShadowDecTreeNode,
     ymin, ymax = ax.get_ylim()
     xr = xmax-xmin
     yr = ymax-ymin
-    th = yr*.05
+    th = yr*.07
     tw = xr*.02
     tria = np.array([[node.split(), 0], [node.split() - tw, -th], [node.split() + tw, -th]])
     t = patches.Polygon(tria, linewidth=1.2, edgecolor='orange',
