@@ -691,9 +691,34 @@ def breast_cancer():
     #print(clf.tree_.value)
     return st
 
+def knowledge():
+    # data from https://archive.ics.uci.edu/ml/datasets/User+Knowledge+Modeling
+    clf = tree.DecisionTreeClassifier(max_depth=4, random_state=666)
+    cancer = pd.read_csv("../../testdata/knowledge.csv")
+    target_names = ['very_low', 'Low', 'Middle', 'High']
+    cancer['UNS'] = cancer['UNS'].map({n: i for i, n in enumerate(target_names)})
+
+    X_train, y_train = cancer.drop('UNS', axis=1), cancer['UNS']
+    clf = clf.fit(X_train, y_train)
+
+    st = dtreeviz(clf, X_train, y_train, target_name='UNS',
+                  feature_names=cancer.columns.values, orientation="TD",
+                  class_names=target_names,
+                  fancy=True, show_edge_labels=True)
+    #print(st)
+
+    with open("/tmp/t3.dot", "w") as f:
+        f.write(st.source)
+
+    #print(clf.tree_.value)
+    return st
+
+
+
 #st = iris()
 #st = wine()
-st = breast_cancer()
+#st = breast_cancer()
+st = knowledge()
 #st = digits()
 # st = boston()
 st.view()
