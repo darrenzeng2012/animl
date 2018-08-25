@@ -3,7 +3,7 @@ import pandas as pd
 import graphviz
 from numpy.distutils.system_info import f2py_info
 from sklearn import tree
-from sklearn.datasets import load_boston, load_iris, load_wine, load_digits
+from sklearn.datasets import load_boston, load_iris, load_wine, load_digits, load_breast_cancer
 from matplotlib.figure import figaspect
 import string
 import re
@@ -290,6 +290,8 @@ def split_viz(node: ShadowDecTreeNode,
         bins = bin_sizes[n_classes]
         overall_feature_range = (np.min(X[:, node.feature()]), np.max(X[:, node.feature()]))
         histtype = 'barstacked' if n_classes<=4 else 'bar'
+        if histtype=='barstacked':
+            bins *= 2
         class_split_viz(node, X_feature, y, colors, feature_name, bins, overall_feature_range,
                         label_fontsize, precision, histtype=histtype)
     else:
@@ -643,8 +645,32 @@ def digits():
     #print(clf.tree_.value)
     return st
 
+def wine():
+    clf = tree.DecisionTreeClassifier(max_depth=4, random_state=666)
+    wine = load_wine()
+
+    #print(iris.data.shape, iris.target.shape)
+
+    data = pd.DataFrame(wine.data)
+    data.columns = wine.feature_names
+
+    clf = clf.fit(data, wine.target)
+
+    st = dtreeviz(clf, data, wine.target,target_name='wine',
+                  feature_names=data.columns, orientation="TD",
+                  class_names=list(wine.target_names),
+                  fancy=True, show_edge_labels=True)
+    #print(st)
+
+    with open("/tmp/t3.dot", "w") as f:
+        f.write(st.source)
+
+    #print(clf.tree_.value)
+    return st
+
 #st = iris()
-st = digits()
+st = wine()
+#st = digits()
 # st = boston()
 st.view()
 #
