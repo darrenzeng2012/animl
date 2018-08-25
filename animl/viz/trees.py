@@ -3,7 +3,7 @@ import pandas as pd
 import graphviz
 from numpy.distutils.system_info import f2py_info
 from sklearn import tree
-from sklearn.datasets import load_boston, load_iris, load_wine, load_digits
+from sklearn.datasets import load_boston, load_iris, load_wine, load_digits, load_breast_cancer
 from matplotlib.figure import figaspect
 import string
 import re
@@ -290,6 +290,11 @@ def split_viz(node: ShadowDecTreeNode,
         bins = bin_sizes[n_classes]
         overall_feature_range = (np.min(X[:, node.feature()]), np.max(X[:, node.feature()]))
         histtype = 'barstacked' if n_classes<=4 else 'bar'
+<<<<<<< HEAD
+=======
+        if histtype=='barstacked':
+            bins *= 2
+>>>>>>> origin
         class_split_viz(node, X_feature, y, colors, feature_name, bins, overall_feature_range,
                         label_fontsize, precision, histtype=histtype)
     else:
@@ -364,8 +369,8 @@ def kde_class_split_viz(node: ShadowDecTreeNode,
     th = yr*.05
     tw = xr*.02
     tria = np.array([[splitval, 0], [splitval - tw, -th], [splitval + tw, -th]])
-    t = patches.Polygon(tria, linewidth=1.2, edgecolor='orange',
-                        facecolor='orange', label='foo')
+    t = patches.Polygon(tria, linewidth=1.2, edgecolor=GREY,
+                        facecolor=GREY)
     t.set_clip_on(False)
     ax.add_patch(t)
     plt.ylim(0.0, ymax)
@@ -381,7 +386,8 @@ def class_split_viz(node: ShadowDecTreeNode,
                     bins,
                     overall_feature_range,
                     label_fontsize: int = 20,
-                    precision=1):
+                    precision=1,
+                    histtype='barstacked'):
     fig, ax = plt.subplots(1, 1, figsize=(7.5, 3.5))
     ax.set_xlabel(f"{feature_name}, split={round(node.split(),1)}", fontsize=label_fontsize, fontname="Arial",
                   color=GREY)
@@ -397,20 +403,23 @@ def class_split_viz(node: ShadowDecTreeNode,
     class_values = node.shadowtree.unique_target_values
     X_hist = [X[y==cl] for cl in class_values]
     X_hist_non0 = [X_hist[cl] for cl in class_values if len(X_hist[cl])>0]
-    X_colors = [colors[cl] for cl in class_values if len(X_hist[cl])>0]
+    X_colors = [colors[cl] for cl in class_values]
+    # X_colors = [colors[cl] for cl in class_values if len(X_hist[cl])>0]
     binwidth = r / bins
     # print(f"{bins} bins, binwidth for feature {node.feature_name()} is {binwidth}")
     # print(np.arange(overall_feature_range[0], overall_feature_range[1] + binwidth,
     #                  binwidth))
 
-    hist, bins, barcontainers = ax.hist(X_hist_non0,
+    hist, bins, barcontainers = ax.hist(X_hist,
                                         color=X_colors,
                                         align='mid',
+                                        histtype=histtype,
                                         # bins=bins,
                                         bins=np.arange(overall_feature_range[0],overall_feature_range[1] + binwidth, binwidth),
                                         label=class_names)
 
     ax.set_xlim(*overall_feature_range)
+    ax.set_xticks(overall_feature_range)
     #ax.set_xticks(np.arange(*feature_range), (feature_range[1]-feature_range[0])/10.0)
     #ax.tick_params(direction='out', length=15, width=10, color=GREY, labelsize=label_fontsize)
     ax.tick_params(color=GREY, labelsize=label_fontsize)
@@ -419,7 +428,7 @@ def class_split_viz(node: ShadowDecTreeNode,
     ymin, ymax = ax.get_ylim()
     xr = xmax-xmin
     yr = ymax-ymin
-    th = yr*.05
+    th = yr*.07
     tw = xr*.02
     tria = np.array([[node.split(), 0], [node.split() - tw, -th], [node.split() + tw, -th]])
     t = patches.Polygon(tria, linewidth=1.2, edgecolor='orange',
@@ -590,11 +599,7 @@ def boston():
     return st
 
 def iris():
-<<<<<<< HEAD
-    clf = tree.DecisionTreeClassifier(max_depth=3, random_state=666)
-=======
     clf = tree.DecisionTreeClassifier(max_depth=6, random_state=666)
->>>>>>> origin
     iris = load_iris()
 
     #print(iris.data.shape, iris.target.shape)
@@ -618,7 +623,7 @@ def iris():
     return st
 
 def digits():
-    clf = tree.DecisionTreeClassifier(max_depth=3, random_state=666)
+    clf = tree.DecisionTreeClassifier(max_depth=4, random_state=666)
     digits = load_digits()
 
     #print(iris.data.shape, iris.target.shape)
@@ -642,7 +647,55 @@ def digits():
     #print(clf.tree_.value)
     return st
 
-st = iris()
+def wine():
+    clf = tree.DecisionTreeClassifier(max_depth=4, random_state=666)
+    wine = load_wine()
+
+    #print(iris.data.shape, iris.target.shape)
+
+    data = pd.DataFrame(wine.data)
+    data.columns = wine.feature_names
+
+    clf = clf.fit(data, wine.target)
+
+    st = dtreeviz(clf, data, wine.target,target_name='wine',
+                  feature_names=data.columns, orientation="TD",
+                  class_names=list(wine.target_names),
+                  fancy=True, show_edge_labels=True)
+    #print(st)
+
+    with open("/tmp/t3.dot", "w") as f:
+        f.write(st.source)
+
+    #print(clf.tree_.value)
+    return st
+
+def breast_cancer():
+    clf = tree.DecisionTreeClassifier(max_depth=4, random_state=666)
+    cancer = load_breast_cancer()
+
+    #print(iris.data.shape, iris.target.shape)
+
+    data = pd.DataFrame(cancer.data)
+    data.columns = cancer.feature_names
+
+    clf = clf.fit(data, cancer.target)
+
+    st = dtreeviz(clf, data, cancer.target,target_name='cancer',
+                  feature_names=data.columns, orientation="TD",
+                  class_names=list(cancer.target_names),
+                  fancy=True, show_edge_labels=True)
+    #print(st)
+
+    with open("/tmp/t3.dot", "w") as f:
+        f.write(st.source)
+
+    #print(clf.tree_.value)
+    return st
+
+#st = iris()
+#st = wine()
+st = breast_cancer()
 #st = digits()
 # st = boston()
 st.view()
