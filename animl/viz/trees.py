@@ -397,13 +397,14 @@ def class_split_viz(node: ShadowDecTreeNode,
     class_values = node.shadowtree.unique_target_values
     X_hist = [X[y==cl] for cl in class_values]
     X_hist_non0 = [X_hist[cl] for cl in class_values if len(X_hist[cl])>0]
-    X_colors = [colors[cl] for cl in class_values if len(X_hist[cl])>0]
+    X_colors = [colors[cl] for cl in class_values]
+    # X_colors = [colors[cl] for cl in class_values if len(X_hist[cl])>0]
     binwidth = r / bins
     # print(f"{bins} bins, binwidth for feature {node.feature_name()} is {binwidth}")
     # print(np.arange(overall_feature_range[0], overall_feature_range[1] + binwidth,
     #                  binwidth))
 
-    hist, bins, barcontainers = ax.hist(X_hist_non0,
+    hist, bins, barcontainers = ax.hist(X_hist,
                                         color=X_colors,
                                         align='mid',
                                         # bins=bins,
@@ -615,7 +616,7 @@ def iris():
     return st
 
 def digits():
-    clf = tree.DecisionTreeClassifier(max_depth=3, random_state=666)
+    clf = tree.DecisionTreeClassifier(max_depth=5, random_state=666)
     digits = load_digits()
 
     #print(iris.data.shape, iris.target.shape)
