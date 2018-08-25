@@ -289,8 +289,9 @@ def split_viz(node: ShadowDecTreeNode,
                     #0, 1, 2,  3, 4, 5, 6, 7, 8, 9, 10
         bins = bin_sizes[n_classes]
         overall_feature_range = (np.min(X[:, node.feature()]), np.max(X[:, node.feature()]))
+        histtype = 'barstacked' if n_classes<=4 else 'bar'
         class_split_viz(node, X_feature, y, colors, feature_name, bins, overall_feature_range,
-                        label_fontsize, precision)
+                        label_fontsize, precision, histtype=histtype)
     else:
         regr_split_viz(node, X_feature, y, figsize, ticks_fontsize)
 
@@ -381,7 +382,8 @@ def class_split_viz(node: ShadowDecTreeNode,
                     bins,
                     overall_feature_range,
                     label_fontsize: int = 20,
-                    precision=1):
+                    precision=1,
+                    histtype='barstacked'):
     fig, ax = plt.subplots(1, 1, figsize=(7.5, 3.5))
     ax.set_xlabel(f"{feature_name}, split={round(node.split(),1)}", fontsize=label_fontsize, fontname="Arial",
                   color=GREY)
@@ -407,6 +409,7 @@ def class_split_viz(node: ShadowDecTreeNode,
     hist, bins, barcontainers = ax.hist(X_hist,
                                         color=X_colors,
                                         align='mid',
+                                        histtype=histtype,
                                         # bins=bins,
                                         bins=np.arange(overall_feature_range[0],overall_feature_range[1] + binwidth, binwidth),
                                         label=class_names)
@@ -616,7 +619,7 @@ def iris():
     return st
 
 def digits():
-    clf = tree.DecisionTreeClassifier(max_depth=5, random_state=666)
+    clf = tree.DecisionTreeClassifier(max_depth=4, random_state=666)
     digits = load_digits()
 
     #print(iris.data.shape, iris.target.shape)
@@ -640,8 +643,8 @@ def digits():
     #print(clf.tree_.value)
     return st
 
-st = iris()
-#st = digits()
+#st = iris()
+st = digits()
 # st = boston()
 st.view()
 #
