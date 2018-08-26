@@ -43,7 +43,9 @@ color_blind_friendly_colors = [
 max_class_colors = len(color_blind_friendly_colors)-1
 
 def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_names=None,
-             precision=1, orientation="TD", show_edge_labels=False, show_root_edge_labels=True, fancy=True):
+             precision=1, orientation="TD", show_edge_labels=False, show_root_edge_labels=True,
+             fancy=True,
+             histtype: ('bar', 'barstacked') = 'barstacked'):
     def round(v,ndigits=precision):
         return format(v, '.' + str(ndigits) + 'f')
 
@@ -177,7 +179,8 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
                   show_ylabel=node == shadow_tree.root,
                   showx=True,
                   precision=precision,
-                  colors=colors)
+                  colors=colors,
+                  histtype=histtype)
 
     leaves = []
     for node in shadow_tree.leaves:
@@ -259,7 +262,8 @@ def split_viz(node: ShadowDecTreeNode,
               figsize: Tuple[Number, Number] = None,
               ticks_fontsize: int = 18,
               label_fontsize: int = 20,
-              precision=1):
+              precision=1,
+              histtype : ('bar','barstacked') ='barstacked'):
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     ax.tick_params(colors=GREY)
 
@@ -296,11 +300,10 @@ def split_viz(node: ShadowDecTreeNode,
                     #0, 1, 2,  3, 4, 5, 6, 7, 8, 9, 10
         bins = bin_sizes[n_classes]
         overall_feature_range = (np.min(X[:, node.feature()]), np.max(X[:, node.feature()]))
-        histtype = 'barstacked' if n_classes<=4 else 'bar'
         if histtype=='barstacked':
             bins *= 2
         class_split_viz(node, X_feature, y, colors, feature_name, bins, overall_feature_range,
-                        label_fontsize, precision, histtype=histtype)
+                        ticks_fontsize, label_fontsize, precision, histtype=histtype)
     else:
         regr_split_viz(node, X_feature, y, figsize, ticks_fontsize)
 
@@ -390,15 +393,16 @@ def class_split_viz(node: ShadowDecTreeNode,
                     feature_name,
                     bins,
                     overall_feature_range,
+                    ticks_fontsize: int = 18,
                     label_fontsize: int = 20,
                     precision=1,
                     histtype='barstacked'):
     fig, ax = plt.subplots(1, 1, figsize=(7.5, 3.5))
-    ax.set_xlabel(f"{feature_name}, split={round(node.split(),1)}", fontsize=label_fontsize, fontname="Arial",
+    ax.set_xlabel(f"{feature_name}", fontsize=label_fontsize, fontname="Arial",
                   color=GREY)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
+    #ax.spines['left'].set_visible(False)
 
     n_classes = node.shadowtree.nclasses()
     class_names = node.shadowtree.class_names
@@ -425,9 +429,9 @@ def class_split_viz(node: ShadowDecTreeNode,
 
     ax.set_xlim(*overall_feature_range)
     ax.set_xticks(overall_feature_range)
+    ax.set_yticks([0,max([max(h) for h in hist])])
     #ax.set_xticks(np.arange(*feature_range), (feature_range[1]-feature_range[0])/10.0)
-    #ax.tick_params(direction='out', length=15, width=10, color=GREY, labelsize=label_fontsize)
-    ax.tick_params(color=GREY, labelsize=label_fontsize)
+    ax.tick_params(axis='both', which='major', labelcolor=GREY, labelsize=ticks_fontsize)
 
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
@@ -437,9 +441,12 @@ def class_split_viz(node: ShadowDecTreeNode,
     tw = xr*.02
     tria = np.array([[node.split(), 0], [node.split() - tw, -th], [node.split() + tw, -th]])
     t = patches.Polygon(tria, linewidth=1.2, edgecolor='orange',
-                        facecolor='orange', label='foo')
+                        facecolor='orange')
     t.set_clip_on(False)
     ax.add_patch(t)
+    ax.text(node.split() + tw, -1.5*th,
+            f"{round(node.split(),1)}",
+            fontsize=label_fontsize, color=GREY)
 
 
     # Alter appearance of each bar
@@ -489,7 +496,6 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
     axes[0].set_ylim(y_range)
     axes[0].tick_params(axis='x', which='both', labelsize=label_fontsize, colors=GREY)
     axes[0].tick_params(axis='y', which='both', labelsize=ticks_fontsize, colors=GREY)
-    # axes[0].tick_params(axis='both', which='both', labelsize=ticks_fontsize, colors=GREY)
 
     meanprops = {'linewidth': 1.2, 'linestyle': '-', 'color': 'black'}
     bp = axes[0].boxplot(y, labels=[target_name],
@@ -723,9 +729,9 @@ def knowledge():
 
 
 
-#st = iris()
+st = iris()
 #st = wine()
-st = breast_cancer()
+#st = breast_cancer()
 #st = knowledge()
 #st = digits()
 # st = boston()
