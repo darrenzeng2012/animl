@@ -43,7 +43,7 @@ color_blind_friendly_colors = [
 max_class_colors = len(color_blind_friendly_colors)-1
 
 def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_names=None,
-             precision=1, orientation="TD", show_edge_labels=False, fancy=True):
+             precision=1, orientation="TD", show_edge_labels=False, show_root_edge_labels=True, fancy=True):
     def round(v,ndigits=precision):
         return format(v, '.' + str(ndigits) + 'f')
 
@@ -197,8 +197,10 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
     elif fancy:
         fromport = ":img:e"
         toport = ":img:w"
-    llabel = '&lt;' if show_edge_labels else ''
-    rlabel = '&ge;' if show_edge_labels else ''
+    all_llabel = '&lt;' if show_edge_labels else ''
+    all_rlabel = '&ge;' if show_edge_labels else ''
+    root_llabel = '&lt;' if show_root_edge_labels else ''
+    root_rlabel = '&ge;' if show_root_edge_labels else ''
 
     edges = []
     # non leaf edges with > and <=
@@ -210,6 +212,11 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         right_node_name = node_name(node.right)
         if node.right.isleaf():
             right_node_name ='leaf%d' % node.right.id
+        llabel = all_llabel
+        rlabel = all_rlabel
+        if node==shadow_tree.root:
+            llabel = root_llabel
+            rlabel = root_rlabel
         edges.append( f'{nname}{fromport} -> {left_node_name}{toport} [label=<{llabel}>]' )
         edges.append( f'{nname}{fromport} -> {right_node_name}{toport} [label=<{rlabel}>]' )
         edges.append(f"""
@@ -474,7 +481,8 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
     if isinstance(y,pd.Series):
         y = y.values
 
-    y = y[node.samples()]
+    samples = node.samples()
+    y = y[samples]
 
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     plt.subplots_adjust(wspace=5)
@@ -636,7 +644,7 @@ def digits():
     st = dtreeviz(clf, data, digits.target,target_name='number',
                   feature_names=data.columns, orientation="TD",
                   class_names=[chr(c) for c in range(ord('0'),ord('9')+1)],
-                  fancy=True, show_edge_labels=True)
+                  fancy=True, show_edge_labels=False)
     #print(st)
 
     with open("/tmp/t3.dot", "w") as f:
@@ -659,7 +667,7 @@ def wine():
     st = dtreeviz(clf, data, wine.target,target_name='wine',
                   feature_names=data.columns, orientation="TD",
                   class_names=list(wine.target_names),
-                  fancy=True, show_edge_labels=True)
+                  fancy=True, show_edge_labels=False)
     #print(st)
 
     with open("/tmp/t3.dot", "w") as f:
@@ -682,7 +690,7 @@ def breast_cancer():
     st = dtreeviz(clf, data, cancer.target,target_name='cancer',
                   feature_names=data.columns, orientation="TD",
                   class_names=list(cancer.target_names),
-                  fancy=True, show_edge_labels=True)
+                  fancy=True, show_edge_labels=False)
     #print(st)
 
     with open("/tmp/t3.dot", "w") as f:
@@ -704,7 +712,7 @@ def knowledge():
     st = dtreeviz(clf, X_train, y_train, target_name='UNS',
                   feature_names=cancer.columns.values, orientation="TD",
                   class_names=target_names,
-                  fancy=True, show_edge_labels=True)
+                  fancy=True, show_edge_labels=False)
     #print(st)
 
     with open("/tmp/t3.dot", "w") as f:
@@ -717,9 +725,10 @@ def knowledge():
 
 #st = iris()
 #st = wine()
-#st = breast_cancer()
-st = knowledge()
+st = breast_cancer()
+#st = knowledge()
 #st = digits()
 # st = boston()
 st.view()
 #
+
