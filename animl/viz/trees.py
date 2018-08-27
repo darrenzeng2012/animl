@@ -104,7 +104,10 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         #width = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts(), output_range=(.2,.8))
         width = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts(), output_range=(0,.16))
         style = 'wedged' if n_classes <= max_class_colors and n_nonzero>1 else 'filled'
-        label = f'<font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">n={node.nsamples()}</font>'
+        adjust = ""
+        if style=='wedged':
+            adjust = "<br/>&nbsp;"
+        label = f'<font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">n={node.nsamples()}{adjust}</font>'
         return f'leaf{node.id} [margin="{width}" style={style} fillcolor="{color_spec}" shape=circle label=<{label}>]'
 
     def class_legend_html(label_fontsize: int = 12):
@@ -304,6 +307,7 @@ def split_viz(node: ShadowDecTreeNode,
         overall_feature_range = (np.min(X[:, node.feature()]), np.max(X[:, node.feature()]))
         if histtype=='barstacked':
             bins *= 2
+        #hist, _ = np.histogram(X, bins=bins)
         class_split_viz(node, X_feature, y, colors, feature_name, bins, overall_feature_range,
                         ticks_fontsize, label_fontsize, precision, histtype=histtype)
     else:
@@ -731,10 +735,10 @@ def knowledge():
 
 
 
-st = iris()
+#st = iris()
 #st = wine()
 #st = breast_cancer()
-#st = knowledge()
+st = knowledge()
 #st = digits()
 # st = boston()
 st.view()
