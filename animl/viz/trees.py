@@ -84,7 +84,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
             html = f"""<font face="Helvetica" color="#444443" point-size="11">{target_name}<br/>{round(value)}</font>"""
             return f'leaf{node.id} [margin="{margin}" style=filled fillcolor="{YELLOW}" shape=circle label=<{html}>]'
 
-    def class_leaf_node(node):
+    def class_leaf_node(node, label_fontsize: int = 12):
         counts = node.class_counts()
         predicted_class = np.argmax(counts)
         predicted = predicted_class
@@ -101,24 +101,26 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         if n_nonzero==1: # make pure
             i = np.nonzero(counts)[0][0]
             color_spec = color_values[i]
-        width = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts(), output_range=(.25,.8))
+        #width = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts(), output_range=(.2,.8))
+        width = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts(), output_range=(0,.16))
         style = 'wedged' if n_classes <= max_class_colors and n_nonzero>1 else 'filled'
-        return f'leaf{node.id} [width="{width}" style={style} fillcolor="{color_spec}" shape=circle label="n={node.nsamples()}"]'
+        label = f'<font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">n={node.nsamples()}</font>'
+        return f'leaf{node.id} [margin="{width}" style={style} fillcolor="{color_spec}" shape=circle label=<{label}>]'
 
-    def class_legend_html():
+    def class_legend_html(label_fontsize: int = 12):
         elements = []
         for i,cl in enumerate(class_values):
             html = f"""
             <tr>
                 <td border="0" cellspacing="0" cellpadding="0"><img src="/tmp/legend{i}.svg"/></td>
-                <td align="left"><font face="Helvetica" color="{GREY}" point-size="12">{class_names[cl]}</font></td>
+                <td align="left"><font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">{class_names[cl]}</font></td>
             </tr>
             """
             elements.append(html)
         return f"""
         <table border="0" cellspacing="0" cellpadding="0">
         <tr>
-            <td border="0" colspan="2"><font face="Helvetica" color="{GREY}" point-size="12"><b>{target_name}</b></font></td>
+            <td border="0" colspan="2"><font face="Helvetica" color="{GREY}" point-size="{label_fontsize}"><b>{target_name}</b></font></td>
         </tr>
         {''.join(elements)}
         </table>
