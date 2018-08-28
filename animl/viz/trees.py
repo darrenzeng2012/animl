@@ -448,16 +448,23 @@ def class_split_viz(node: ShadowDecTreeNode,
     ymin, ymax = ax.get_ylim()
     xr = xmax-xmin
     yr = ymax-ymin
-    th = yr*.07
-    tw = xr*.02
+    th = yr*.071
+    tw = xr*.021
     tria = np.array([[node.split(), 0], [node.split() - tw, -th], [node.split() + tw, -th]])
     t = patches.Polygon(tria, linewidth=1.2, edgecolor='orange',
                         facecolor='orange')
     t.set_clip_on(False)
     ax.add_patch(t)
-    ax.text(node.split() + tw, -1.5*th,
-            f"{round(node.split(),1)}",
-            fontsize=label_fontsize, color=GREY)
+    if (node.split()-overall_feature_range[0]) > .8*r:
+        ax.text(node.split() - tw, -1.5*th,
+                f"{round(node.split(),1)}",
+                horizontalalignment='right',
+                fontsize=label_fontsize, color=GREY)
+    else:
+        ax.text(node.split() + tw, -1.5*th,
+                f"{round(node.split(),1)}",
+                horizontalalignment='left',
+                fontsize=label_fontsize, color=GREY)
 
 
     # Alter appearance of each bar
