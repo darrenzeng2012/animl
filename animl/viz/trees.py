@@ -102,13 +102,18 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
             i = np.nonzero(counts)[0][0]
             color_spec = color_values[i]
         #width = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts(), output_range=(.2,.8))
-        width = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts(), output_range=(0,.16))
+        width = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts(), output_range=(.15,.85))
         style = 'wedged' if n_classes <= max_class_colors and n_nonzero>1 else 'filled'
         adjust = ""
         if style=='wedged':
             adjust = "<br/>&nbsp;"
         label = f'<font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">n={node.nsamples()}{adjust}</font>'
-        return f'leaf{node.id} [margin="{width}" style={style} fillcolor="{color_spec}" shape=circle label=<{label}>]'
+        gr = f'leaf{node.id} [fixedwidth="true" width="{width}" style={style} fillcolor="{color_spec}" shape=circle label=""]'
+        annot = f"""
+           leaf{node.id}_annot [shape=none label=""]
+           leaf{node.id} -> leaf{node.id}_annot [penwidth=0 arrowsize=0 labeldistance="1.2" labelangle="0" taillabel=<{label}>]
+        """
+        return gr + annot
 
     def class_legend_html(label_fontsize: int = 12):
         elements = []
