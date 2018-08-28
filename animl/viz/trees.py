@@ -105,13 +105,15 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         width = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts(), output_range=(.15,.85))
         style = 'wedged' if n_classes <= max_class_colors and n_nonzero>1 else 'filled'
         adjust = ""
+        labeldistance=".6"
         if style=='wedged':
             adjust = "<br/>&nbsp;"
+            labeldistance="1.2"
         label = f'<font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">n={node.nsamples()}{adjust}</font>'
         gr = f'leaf{node.id} [fixedwidth="true" width="{width}" style={style} fillcolor="{color_spec}" shape=circle label=""]'
         annot = f"""
            leaf{node.id}_annot [shape=none label=""]
-           leaf{node.id} -> leaf{node.id}_annot [penwidth=0 arrowsize=0 labeldistance="1.2" labelangle="0" taillabel=<{label}>]
+           leaf{node.id} -> leaf{node.id}_annot [penwidth=0 arrowsize=0 labeldistance="{labeldistance}" labelangle="0" taillabel=<{label}>]
         """
         return gr + annot
 
@@ -629,7 +631,7 @@ def boston():
     return st
 
 def iris():
-    clf = tree.DecisionTreeClassifier(max_depth=6, random_state=666)
+    clf = tree.DecisionTreeClassifier(max_depth=3, random_state=666)
     iris = load_iris()
 
     #print(iris.data.shape, iris.target.shape)
