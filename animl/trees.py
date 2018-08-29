@@ -99,6 +99,29 @@ class ShadowDecTree:
     def isclassifier(self):
         return self.tree_model.tree_.n_classes > 1
 
+    def get_split_node_heights(self, X_train, y_train, nbins) -> Mapping[int,int]:
+        class_values = self.unique_target_values
+        node_heights = {}
+        for node in self.internal:
+            # print(node.feature_name(), node.id)
+            X_feature = X_train[:, node.feature()]
+            X, y = X_feature[node.samples()], y_train[node.samples()]
+            X_hist = [X[y == cl] for cl in class_values]
+            height_of_bins = np.zeros(nbins)
+            for cl in class_values:
+                overall_feature_range = (np.min(X_feature), np.max(X_feature))
+                r = overall_feature_range[1] - overall_feature_range[0]
+                binwidth = r / nbins
+                bins = np.arange(overall_feature_range[0],
+                                 overall_feature_range[1] + binwidth, binwidth),
+                bins = bins[0]
+                hist, foo = np.histogram(X_hist[cl], bins=bins)
+                height_of_bins += hist
+            node_heights[node.id] = np.max(height_of_bins)
+
+            # print(f"\t{cl}: {np.max(height_of_bins)}, {list(height_of_bins)}")
+        return node_heights
+
     @staticmethod
     def node_samples(tree_model, data) -> Mapping[int, list]:
         """

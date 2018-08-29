@@ -24,7 +24,8 @@ LIGHTORANGE = '#fee090'
 LIGHTBLUE = '#a6bddb'
 GREY = '#444443'
 
-#dark_colors = [DARKBLUE, DARKGREEN, '#a50026', '#fdae61', '#c51b7d', '#fee090']
+NUM_BINS = [0, 0, 10, 9, 8, 6, 6, 6, 5, 5, 5]
+            # 0, 1, 2,  3, 4, 5, 6, 7, 8, 9, 10
 
 color_blind_friendly_colors = [
     None, # 0 classes
@@ -105,15 +106,24 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         width = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts(), output_range=(.15,.85))
         style = 'wedged' if n_classes <= max_class_colors and n_nonzero>1 else 'filled'
         adjust = ""
-        labeldistance=".6"
+        labelangle = "0"
         if style=='wedged':
             adjust = "<br/>&nbsp;"
-            labeldistance="1.2"
+            if orientation=='TD':
+                labeldistance="1.2"
+            else:
+                labelangle = "-20"
+                labeldistance = "1.4"
+        else:
+            if orientation=='TD':
+                labeldistance=".6"
+            else:
+                labeldistance = "1.3"
         label = f'<font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">n={node.nsamples()}{adjust}</font>'
         gr = f'leaf{node.id} [fixedwidth="true" width="{width}" style={style} fillcolor="{color_spec}" shape=circle label=""]'
         annot = f"""
            leaf{node.id}_annot [shape=none label=""]
-           leaf{node.id} -> leaf{node.id}_annot [penwidth=0 arrowsize=0 labeldistance="{labeldistance}" labelangle="0" taillabel=<{label}>]
+           leaf{node.id} -> leaf{node.id}_annot [penwidth=0 arrowsize=0 labeldistance="{labeldistance}" labelangle="{labelangle}" taillabel=<{label}>]
         """
         return gr + annot
 
@@ -177,6 +187,10 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
     if isinstance(y_train,pd.Series):
         y_train = y_train.values
 
+    # Find max height (count) for any bar in any node
+    nbins = get_num_bins(histtype, n_classes)
+    node_heights = shadow_tree.get_split_node_heights(X_train, y_train, nbins=nbins)
+
     internal = []
     for node in shadow_tree.internal:
         nname = node_name(node)
@@ -192,7 +206,8 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
                   showx=True,
                   precision=precision,
                   colors=colors,
-                  histtype=histtype)
+                  histtype=histtype,
+                  node_heights=node_heights)
 
     leaves = []
     for node in shadow_tree.leaves:
@@ -266,6 +281,7 @@ def split_viz(node: ShadowDecTreeNode,
               y: (pd.Series, np.ndarray),
               target_name: str,
               colors : Mapping[int,str],
+              node_heights,
               filename: str = None,
               showx=True,
               showy=True,
@@ -308,19 +324,17 @@ def split_viz(node: ShadowDecTreeNode,
 
     if node.isclassifier():
         n_classes = node.shadowtree.nclasses()
-        bin_sizes = [0, 0, 10, 9, 8, 6, 6, 6, 5, 5, 5]
-                    #0, 1, 2,  3, 4, 5, 6, 7, 8, 9, 10
-        bins = bin_sizes[n_classes]
+        bins = get_num_bins(histtype, n_classes)
         overall_feature_range = (np.min(X[:, node.feature()]), np.max(X[:, node.feature()]))
-        if histtype=='barstacked':
-            bins *= 2
-        #hist, _ = np.histogram(X, bins=bins)
-        class_split_viz(node, X_feature, y, colors, feature_name, bins, overall_feature_range,
-                        ticks_fontsize, label_fontsize, precision, histtype=histtype)
+        class_split_viz(node, X=X_feature, y=y, colors=colors, feature_name=feature_name,
+                        bins=bins, overall_feature_range=overall_feature_range,
+                        ticks_fontsize=ticks_fontsize, label_fontsize=label_fontsize,
+                        precision=precision, histtype=histtype,
+                        node_heights=node_heights)
     else:
         regr_split_viz(node, X_feature, y, figsize, ticks_fontsize)
 
-    plt.tight_layout()
+    #plt.tight_layout()
     if filename is not None:
         plt.savefig(filename, bbox_inches='tight', pad_inches=0)
         plt.close()
@@ -400,16 +414,18 @@ def kde_class_split_viz(node: ShadowDecTreeNode,
 
 
 def class_split_viz(node: ShadowDecTreeNode,
-                    X: (pd.DataFrame, np.ndarray),
-                    y: (pd.Series, np.ndarray),
+                    X: np.ndarray,
+                    y: np.ndarray,
                     colors: Mapping[int, str],
                     feature_name,
                     bins,
                     overall_feature_range,
+                    node_heights,
                     ticks_fontsize: int = 18,
                     label_fontsize: int = 20,
                     precision=1,
                     histtype='barstacked'):
+    h = prop_size(n=node_heights[node.id], counts=node_heights.values(), output_range=(1,3.5))
     fig, ax = plt.subplots(1, 1, figsize=(7.5, 3.5))
     ax.set_xlabel(f"{feature_name}", fontsize=label_fontsize, fontname="Arial",
                   color=GREY)
@@ -457,7 +473,7 @@ def class_split_viz(node: ShadowDecTreeNode,
                         facecolor='orange')
     t.set_clip_on(False)
     ax.add_patch(t)
-    if (node.split()-overall_feature_range[0]) > .8*r:
+    if (node.split()-overall_feature_range[0]) >= .5*r:
         ax.text(node.split() - tw, -1.5*th,
                 f"{round(node.split(),1)}",
                 horizontalalignment='right',
@@ -610,6 +626,13 @@ def prop_size(n, counts, output_range = (0.00, 0.3)):
         return output_range[0]
 
 
+def get_num_bins(histtype, n_classes):
+    bins = NUM_BINS[n_classes]
+    if histtype == 'barstacked':
+        bins *= 2
+    return bins
+
+
 def boston():
     regr = tree.DecisionTreeRegressor(max_depth=3, random_state=666)
     boston = load_boston()
@@ -670,7 +693,7 @@ def digits():
     st = dtreeviz(clf, data, digits.target,target_name='number',
                   feature_names=data.columns, orientation="TD",
                   class_names=[chr(c) for c in range(ord('0'),ord('9')+1)],
-                  fancy=True, show_edge_labels=False)
+                  fancy=True, show_edge_labels=False, histtype='bar')
     #print(st)
 
     with open("/tmp/t3.dot", "w") as f:
