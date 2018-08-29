@@ -57,11 +57,13 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         node_name = re.sub("["+string.punctuation+string.whitespace+"]", '_', node_name)
         return node_name
 
-    def split_node(name, node_name, split):
+    def split_node(name, node_name, split, figsize):
+        h_to_w_ratio = figsize[1]/figsize[0]
         if fancy:
+            #                     <td port="img" fixedsize="true" width="202.5" height="90"><img src="/tmp/node{node.id}.svg"/></td>
             html = f"""<table border="0">
             <tr>
-                    <td port="img" fixedsize="true" width="202.5" height="90"><img src="/tmp/node{node.id}.svg"/></td>
+                    <td port="img" fixedsize="true" width="202.5" height="{202.5*h_to_w_ratio}"><img src="/tmp/node{node.id}.svg"/></td>
             </tr>
             </table>"""
         else:
@@ -175,7 +177,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         class_values = shadow_tree.unique_target_values
         colors = {v:color_values[i] for i,v in enumerate(class_values)}
 
-    figsize = (4.5, 2)
+    #figsize = (4.5, 2)
 
     y_range = (min(y_train)*1.03, max(y_train)*1.03) # same y axis for all
 
@@ -193,21 +195,18 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
 
     internal = []
     for node in shadow_tree.internal:
+        figsize = split_viz(node, X_train, y_train, filename=f"/tmp/node{node.id}.svg",
+                            target_name=target_name,
+                            y_range=y_range,
+                            show_ylabel=node == shadow_tree.root,
+                            showx=True,
+                            precision=precision,
+                            colors=colors,
+                            histtype=histtype,
+                            node_heights=node_heights)
         nname = node_name(node)
-        # st += dec_node_box(name, nname, split=round(threshold[i]))
-        gr_node = split_node(node.feature_name(), nname, split=round(node.split()))
+        gr_node = split_node(node.feature_name(), nname, split=round(node.split()), figsize=figsize)
         internal.append(gr_node)
-
-        split_viz(node, X_train, y_train, filename=f"/tmp/node{node.id}.svg",
-                  target_name=target_name,
-                  figsize=figsize,
-                  y_range=y_range,
-                  show_ylabel=node == shadow_tree.root,
-                  showx=True,
-                  precision=precision,
-                  colors=colors,
-                  histtype=histtype,
-                  node_heights=node_heights)
 
     leaves = []
     for node in shadow_tree.leaves:
@@ -339,6 +338,8 @@ def split_viz(node: ShadowDecTreeNode,
         plt.savefig(filename, bbox_inches='tight', pad_inches=0)
         plt.close()
 
+    return fig.get_size_inches()
+
 
 def kde_class_split_viz(node: ShadowDecTreeNode,
                         X: (pd.DataFrame, np.ndarray),
@@ -426,7 +427,7 @@ def class_split_viz(node: ShadowDecTreeNode,
                     precision=1,
                     histtype='barstacked'):
     h = prop_size(n=node_heights[node.id], counts=node_heights.values(), output_range=(1,3.5))
-    fig, ax = plt.subplots(1, 1, figsize=(7.5, 3.5))
+    fig, ax = plt.subplots(1, 1, figsize=(7.5, h))
     ax.set_xlabel(f"{feature_name}", fontsize=label_fontsize, fontname="Arial",
                   color=GREY)
     ax.spines['top'].set_visible(False)
