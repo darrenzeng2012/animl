@@ -102,24 +102,29 @@ class ShadowDecTree:
     def get_split_node_heights(self, X_train, y_train, nbins) -> Mapping[int,int]:
         class_values = self.unique_target_values
         node_heights = {}
+        # print(f"Goal {nbins} bins")
         for node in self.internal:
             # print(node.feature_name(), node.id)
             X_feature = X_train[:, node.feature()]
+            overall_feature_range = (np.min(X_feature), np.max(X_feature))
+            # print(f"range {overall_feature_range}")
+            r = overall_feature_range[1] - overall_feature_range[0]
+            binwidth = r / nbins
+            bins = np.linspace(overall_feature_range[0],
+                               overall_feature_range[1], nbins+1)
+            # bins = np.arange(overall_feature_range[0],
+            #                  overall_feature_range[1] + binwidth, binwidth)
+            # print(f"\tlen(bins)={len(bins):2d} bins={bins}")
             X, y = X_feature[node.samples()], y_train[node.samples()]
             X_hist = [X[y == cl] for cl in class_values]
             height_of_bins = np.zeros(nbins)
             for cl in class_values:
-                overall_feature_range = (np.min(X_feature), np.max(X_feature))
-                r = overall_feature_range[1] - overall_feature_range[0]
-                binwidth = r / nbins
-                bins = np.arange(overall_feature_range[0],
-                                 overall_feature_range[1] + binwidth, binwidth),
-                bins = bins[0]
-                hist, foo = np.histogram(X_hist[cl], bins=bins)
+                hist, foo = np.histogram(X_hist[cl], bins=bins, range=overall_feature_range)
+                # print(f"class {cl}: goal_n={len(bins):2d} n={len(hist):2d} {hist}")
                 height_of_bins += hist
             node_heights[node.id] = np.max(height_of_bins)
 
-            # print(f"\t{cl}: {np.max(height_of_bins)}, {list(height_of_bins)}")
+            # print(f"\tmax={np.max(height_of_bins):2.0f}, heights={list(height_of_bins)}, {len(height_of_bins)} bins")
         return node_heights
 
     @staticmethod

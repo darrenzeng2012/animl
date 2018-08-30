@@ -60,7 +60,6 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
     def split_node(name, node_name, split):
         img_shape = get_SVG_shape(f"/tmp/node{node.id}.svg")
         if fancy:
-            #                     <td port="img" fixedsize="true" width="202.5" height="90"><img src="/tmp/node{node.id}.svg"/></td>
             html = f"""<table border="0">
             <tr>
                     <td port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="/tmp/node{node.id}.svg"/></td>
@@ -190,8 +189,9 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         y_train = y_train.values
 
     # Find max height (count) for any bar in any node
-    nbins = get_num_bins(histtype, n_classes)
-    node_heights = shadow_tree.get_split_node_heights(X_train, y_train, nbins=nbins)
+    if shadow_tree.isclassifier():
+        nbins = get_num_bins(histtype, n_classes)
+        node_heights = shadow_tree.get_split_node_heights(X_train, y_train, nbins=nbins)
 
     internal = []
     for node in shadow_tree.internal:
@@ -429,14 +429,14 @@ def regr_split_viz(node: ShadowDecTreeNode,
 
     ax.tick_params(axis='both', which='major', labelsize=ticks_fontsize)
 
-    ax.scatter(X, y, s=3, c=LIGHTBLUE, alpha=1.0)
+    ax.scatter(X_feature, y, s=3, c=LIGHTBLUE, alpha=1.0)
     left, right = node.split_samples()
     left = y[left]
     right = y[right]
     split = node.split()
-    ax.plot([min(X),split],[np.mean(left),np.mean(left)],'--', color=GREY, linewidth=1.6)
+    ax.plot([min(X_feature),split],[np.mean(left),np.mean(left)],'--', color=GREY, linewidth=1.6)
     ax.plot([split,split],[min(y),max(y)],'--', color=GREY, linewidth=1.6)
-    ax.plot([split,max(X)],[np.mean(right),np.mean(right)],'--', color=GREY, linewidth=1.6)
+    ax.plot([split,max(X_feature)],[np.mean(right),np.mean(right)],'--', color=GREY, linewidth=1.6)
 
     #plt.tight_layout()
     if filename is not None:
@@ -793,12 +793,12 @@ def knowledge():
 
 
 
-st = iris()
+#st = iris()
 #st = wine()
 #st = breast_cancer()
-#st = knowledge()
+st = knowledge()
 #st = digits()
-# st = boston()
+#st = boston()
 st.view()
 #
 
