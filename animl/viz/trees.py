@@ -400,7 +400,12 @@ def regr_split_viz(node: ShadowDecTreeNode,
     ax.tick_params(colors=GREY)
 
     feature_name = node.feature_name()
-    ax.set_xlabel(f"{feature_name}@{round(node.split(),precision)}", fontsize=label_fontsize, fontname="Arial", color=GREY)
+    ticklabelpad = plt.rcParams['xtick.major.pad']
+    ax.annotate(f"{feature_name}@{round(node.split(),precision)}",
+                xy=(.5, 0), xytext=(.5, -2*ticklabelpad), ha='center', va='top',
+                xycoords='axes fraction', textcoords='offset points',
+                fontsize = label_fontsize, fontname = "Arial", color = GREY)
+
     ax.set_ylim(y_range)
     if node==node.shadowtree.root:
         ax.set_ylabel(target_name, fontsize=label_fontsize, fontname="Arial", color=GREY)
@@ -415,14 +420,19 @@ def regr_split_viz(node: ShadowDecTreeNode,
     X_feature = X[:,node.feature()]
     X_feature, y = X_feature[node.samples()], y[node.samples()]
 
+    overall_feature_range = (np.min(X[:,node.feature()]), np.max(X[:,node.feature()]))
+    ax.set_xlim(*overall_feature_range)
+    ax.set_xticks(overall_feature_range)
+
+
     ax.scatter(X_feature, y, s=5, c='#225ea8', alpha=.4)
     left, right = node.split_samples()
     left = y[left]
     right = y[right]
     split = node.split()
-    ax.plot([min(X_feature),split],[np.mean(left),np.mean(left)],'--', color=GREY, linewidth=.5)
+    ax.plot([overall_feature_range[0],split],[np.mean(left),np.mean(left)],'--', color=GREY, linewidth=.5)
     ax.plot([split,split],[min(y),max(y)],'--', color=GREY, linewidth=.5)
-    ax.plot([split,max(X_feature)],[np.mean(right),np.mean(right)],'--', color=GREY, linewidth=.5)
+    ax.plot([split,overall_feature_range[1]],[np.mean(right),np.mean(right)],'--', color=GREY, linewidth=.5)
 
     if filename is not None:
         plt.savefig(filename, bbox_inches='tight', pad_inches=0)
@@ -523,7 +533,14 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
     ax.spines['left'].set_linewidth(.3)
     ax.set_xticks([])
     # ax.xaxis.set_visible(False)
-    ax.set_xlabel(f"{target_name}={round(m,precision)}", fontsize=label_fontsize, fontname="Arial", color=GREY)
+    # ax.set_xlabel(f"{target_name}={round(m,precision)}", fontsize=label_fontsize, fontname="Arial", color=GREY)
+
+    ticklabelpad = plt.rcParams['xtick.major.pad']
+    ax.annotate(f"{target_name}={round(m,precision)}",
+                xy=(.5, 0), xytext=(.5, -.5*ticklabelpad), ha='center', va='top',
+                xycoords='axes fraction', textcoords='offset points',
+                fontsize = label_fontsize, fontname = "Arial", color = GREY)
+
     ax.tick_params(axis='y', which='major', width=.3, labelcolor=GREY, labelsize=ticks_fontsize)
 
     # Get X, y data for all samples associated with this node.
