@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import graphviz
+import graphviz.backend
 from numpy.distutils.system_info import f2py_info
 from sklearn import tree
 from sklearn.datasets import load_boston, load_iris, load_wine, load_digits, load_breast_cancer, load_diabetes, fetch_mldata
@@ -172,12 +173,23 @@ def viz_knowledge(orientation, max_depth, random_state=666):
     return st
 
 
-
-def save(name, orientation, max_depth):
+def save(name, dirname, orientation, max_depth):
     print(f"Process {name} orientation={orientation} max_depth={max_depth}")
     st = f(orientation=orientation, max_depth=max_depth)
-    g = graphviz.Source(st, format='pdf')
-    g.render(directory=dirname, filename=f"{name}-{orientation}-{max_depth}", view=False, cleanup=True)
+    # Gen both pdf/png
+    g = graphviz.Source(st, format='pdf') # can't gen svg as it refs files in tmp dir that disappear
+    filename = f"{name}-{orientation}-{max_depth}"
+    g.render(directory=dirname, filename=filename, view=False, cleanup=True)
+
+    # do it the hard way to set dpi for png
+    # g = graphviz.Source(st, format='png')
+    # filepath = g.save(filename=f"{filename}.dot", directory=tempfile.gettempdir()) # save dot file
+    # # cmd, rendered = graphviz.backend.command('dot', 'png', filepath)
+    # cmd = ['dot', '-Gdpi=300', '-Tpng', f'-o{dirname}/{filename}.png', filepath]
+    # graphviz.backend.run(cmd, capture_output=True, check=True, quiet=False)
+    # That conversion fails to get good image. do this on command line:
+    #
+    # $ convert -density 300x300 boston-TD-2.pdf foo.png
 
 
 all_functions = inspect.getmembers(sys.modules[__name__], inspect.isfunction)
@@ -187,11 +199,11 @@ viz_funcs = [f[1] for f in these_functions if f[0].startswith('viz_')]
 if len(sys.argv)>1:
     dirname = sys.argv[1]
 else:
-    dirname = tempfile.gettempdir()
+    dirname = "."
 
+print(f"tmp dir is {tempfile.gettempdir()}")
 for f in viz_funcs:
     name = f.__name__[len("viz_"):]
-    save(name, "TD", 2)
-    save(name, "TD", 4)
-    save(name, "LR", 3)
-
+    save(name, dirname, "TD", 2)
+    save(name, dirname, "TD", 4)
+    save(name, dirname, "LR", 3)

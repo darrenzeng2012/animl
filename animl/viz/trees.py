@@ -271,7 +271,8 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
 
     newline = "\n\t"
     st = f"""
-digraph G {{splines=line;
+digraph G {{
+    splines=line;
     nodesep=0.1;
     ranksep={ranksep};
     rankdir={orientation};
