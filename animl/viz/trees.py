@@ -3,12 +3,7 @@ import pandas as pd
 import graphviz
 from numpy.distutils.system_info import f2py_info
 from sklearn import tree
-from sklearn.datasets import load_boston, load_iris, load_wine, load_digits, load_breast_cancer, load_diabetes, fetch_mldata
-from matplotlib.figure import figaspect
-import string
-import re
 import matplotlib.pyplot as plt
-import seaborn as sns
 from animl.trees import *
 from numbers import Number
 import matplotlib.patches as patches
@@ -25,8 +20,9 @@ LIGHTORANGE = '#fee090'
 LIGHTBLUE = '#a6bddb'
 GREY = '#444443'
 
+# How many bins should we have based upon number of classes
 NUM_BINS = [0, 0, 10, 9, 8, 6, 6, 6, 5, 5, 5]
-            # 0, 1, 2,  3, 4, 5, 6, 7, 8, 9, 10
+          # 0, 1, 2,  3, 4, 5, 6, 7, 8, 9, 10
 
 color_blind_friendly_colors = [
     None, # 0 classes
@@ -551,57 +547,7 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
 
     ax.scatter(X, y, s=5, c='#225ea8', alpha=.4)
     left, right = node.split_samples()
-    left = y[left]
-    right = y[right]
     ax.plot([0,len(node.samples())],[m,m],'--', color=GREY, linewidth=.5)
-
-    plt.tight_layout()
-    if filename is not None:
-        plt.savefig(filename, bbox_inches='tight', pad_inches=0)
-        plt.close()
-
-
-def old_regr_leaf_viz(node : ShadowDecTreeNode,
-                  y : (pd.Series,np.ndarray),
-                  target_name,
-                  filename:str=None,
-                  y_range=None,
-                  precision=1,
-                  figsize:Tuple[Number,Number]=(1.35, 1.4),
-                  label_fontsize:int=9,
-                  ticks_fontsize: int = 7):
-    samples = node.samples()
-    y = y[samples]
-
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
-    # plt.subplots_adjust(wspace=5)
-    axes[0].set_ylim(y_range)
-    axes[0].tick_params(axis='both', which='major', width=.3, labelcolor=GREY, labelsize=ticks_fontsize)
-    axes[0].spines['top'].set_linewidth(.3)
-    axes[0].spines['right'].set_linewidth(.3)
-    axes[0].spines['left'].set_linewidth(.3)
-    axes[0].spines['bottom'].set_linewidth(.3)
-
-    meanprops = {'linewidth': .5, 'linestyle': '-', 'color': 'black'}
-    bp = axes[0].boxplot(y, labels=[target_name],
-                        notch=False, medianprops={'linewidth': 0}, meanprops=meanprops,
-                        widths=[.8], showmeans=True, meanline=True, sym='', patch_artist=True)
-    for patch in bp['boxes']:
-        patch.set(facecolor='#225ea8', alpha=.6)
-
-    axes[1].yaxis.tick_right()
-    axes[1].set_ylim(0, len(node.shadowtree.X_train))
-    axes[1].bar(0, node.nsamples(), color=LIGHTORANGE, tick_label="n")
-    axes[1].axhline(node.nsamples(), color=GREY, linewidth=.5)
-    axes[1].tick_params(axis='both', which='major', width=.3, labelcolor=GREY, labelsize=ticks_fontsize)
-    axes[1].spines['top'].set_linewidth(.3)
-    axes[1].spines['right'].set_linewidth(.3)
-    axes[1].spines['left'].set_linewidth(.3)
-    axes[1].spines['bottom'].set_linewidth(.3)
-
-    for ax in axes:
-        for tick in ax.xaxis.get_major_ticks():
-            tick.label.set_fontsize(label_fontsize)
 
     plt.tight_layout()
     if filename is not None:

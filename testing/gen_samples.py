@@ -29,7 +29,7 @@ and data paths are set correctly.
 
 # REGRESSION
 
-def viz_boston(orientation, max_depth, random_state=666):
+def viz_boston(orientation="TD", max_depth=3, random_state=666):
     regr = tree.DecisionTreeRegressor(max_depth=max_depth, random_state=random_state)
     boston = load_boston()
 
@@ -46,7 +46,7 @@ def viz_boston(orientation, max_depth, random_state=666):
 
     return st
 
-def viz_diabetes(orientation, max_depth, random_state=666):
+def viz_diabetes(orientation="TD", max_depth=3, random_state=666):
     diabetes = load_diabetes()
 
     regr = tree.DecisionTreeRegressor(max_depth=max_depth, random_state=random_state)
@@ -58,7 +58,7 @@ def viz_diabetes(orientation, max_depth, random_state=666):
 
     return st
 
-def viz_sweets(orientation, max_depth, random_state=666):
+def viz_sweets(orientation="TD", max_depth=3, random_state=666):
     sweets = pd.read_csv("testing/data/sweetrs.csv")
     sweets = sweets.sample(n=2000) # just grab 2000 of 17k
 
@@ -73,7 +73,7 @@ def viz_sweets(orientation, max_depth, random_state=666):
 
     return st
 
-def viz_fires(orientation, max_depth, random_state=666):
+def viz_fires(orientation="TD", max_depth=3, random_state=666):
     fires = pd.read_csv("testing/data/forestfires.csv")
     fires['month'] = fires['month'].astype('category').cat.as_ordered()
     fires['month'] = fires['month'].cat.codes + 1
@@ -94,7 +94,7 @@ def viz_fires(orientation, max_depth, random_state=666):
 
 # CLASSIFICATION
 
-def viz_iris(orientation, max_depth, random_state=666):
+def viz_iris(orientation="TD", max_depth=3, random_state=666):
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     iris = load_iris()
 
@@ -110,7 +110,7 @@ def viz_iris(orientation, max_depth, random_state=666):
 
     return st
 
-def viz_digits(orientation, max_depth, random_state=666):
+def viz_digits(orientation="TD", max_depth=3, random_state=666):
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     digits = load_digits()
 
@@ -126,7 +126,7 @@ def viz_digits(orientation, max_depth, random_state=666):
                   fancy=True, histtype='bar')
     return st
 
-def viz_wine(orientation, max_depth, random_state=666):
+def viz_wine(orientation="TD", max_depth=3, random_state=666):
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     wine = load_wine()
 
@@ -141,7 +141,7 @@ def viz_wine(orientation, max_depth, random_state=666):
                   fancy=True)
     return st
 
-def viz_breast_cancer(orientation, max_depth, random_state=666):
+def viz_breast_cancer(orientation="TD", max_depth=3, random_state=666):
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     cancer = load_breast_cancer()
 
@@ -156,7 +156,7 @@ def viz_breast_cancer(orientation, max_depth, random_state=666):
                   fancy=True)
     return st
 
-def viz_knowledge(orientation, max_depth, random_state=666):
+def viz_knowledge(orientation="TD", max_depth=3, random_state=666):
     # data from https://archive.ics.uci.edu/ml/datasets/User+Knowledge+Modeling
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     cancer = pd.read_csv("testing/data/knowledge.csv")
@@ -192,18 +192,19 @@ def save(name, dirname, orientation, max_depth):
     # $ convert -density 300x300 boston-TD-2.pdf foo.png
 
 
-all_functions = inspect.getmembers(sys.modules[__name__], inspect.isfunction)
-these_functions = [t for t in all_functions if inspect.getmodule(t[1]) == sys.modules[__name__]]
-viz_funcs = [f[1] for f in these_functions if f[0].startswith('viz_')]
+if __name__ == '__main__':
+    all_functions = inspect.getmembers(sys.modules[__name__], inspect.isfunction)
+    these_functions = [t for t in all_functions if inspect.getmodule(t[1]) == sys.modules[__name__]]
+    viz_funcs = [f[1] for f in these_functions if f[0].startswith('viz_')]
 
-if len(sys.argv)>1:
-    dirname = sys.argv[1]
-else:
-    dirname = "."
+    if len(sys.argv)>1:
+        dirname = sys.argv[1]
+    else:
+        dirname = "."
 
-print(f"tmp dir is {tempfile.gettempdir()}")
-for f in viz_funcs:
-    name = f.__name__[len("viz_"):]
-    save(name, dirname, "TD", 2)
-    save(name, dirname, "TD", 4)
-    save(name, dirname, "LR", 3)
+    print(f"tmp dir is {tempfile.gettempdir()}")
+    for f in viz_funcs:
+        name = f.__name__[len("viz_"):]
+        save(name, dirname, "TD", 2)
+        save(name, dirname, "TD", 4)
+        save(name, dirname, "LR", 3)
