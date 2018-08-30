@@ -3,7 +3,7 @@ import pandas as pd
 import graphviz
 from numpy.distutils.system_info import f2py_info
 from sklearn import tree
-from sklearn.datasets import load_boston, load_iris, load_wine, load_digits, load_breast_cancer
+from sklearn.datasets import load_boston, load_iris, load_wine, load_digits, load_breast_cancer, load_diabetes, fetch_mldata
 from matplotlib.figure import figaspect
 import string
 import re
@@ -44,7 +44,7 @@ color_blind_friendly_colors = [
 max_class_colors = len(color_blind_friendly_colors)-1
 
 def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_names=None,
-             precision=1, orientation="TD", show_edge_labels=False, show_root_edge_labels=True,
+             precision=1, orientation="TD", show_root_edge_labels=True,
              fancy=True,
              histtype: ('bar', 'barstacked') = 'barstacked'):
     def round(v,ndigits=precision):
@@ -236,6 +236,8 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
     elif fancy:
         fromport = ":img:e"
         toport = ":img:w"
+
+    show_edge_labels = False
     all_llabel = '&lt;' if show_edge_labels else ''
     all_rlabel = '&ge;' if show_edge_labels else ''
     root_llabel = '&lt;' if show_root_edge_labels else ''
@@ -514,7 +516,6 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
                   filename:str=None,
                   y_range=None,
                   precision=1,
-                  figsize:Tuple[Number,Number]=(1.35, 1.4),
                   label_fontsize:int=9,
                   ticks_fontsize: int = 8):
     samples = node.samples()
@@ -532,8 +533,7 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
     ax.spines['bottom'].set_visible(False)
     ax.spines['left'].set_linewidth(.3)
     ax.set_xticks([])
-    # ax.xaxis.set_visible(False)
-    # ax.set_xlabel(f"{target_name}={round(m,precision)}", fontsize=label_fontsize, fontname="Arial", color=GREY)
+    # ax.set_yticks(y_range)
 
     ticklabelpad = plt.rcParams['xtick.major.pad']
     ax.annotate(f"{target_name}={round(m,precision)}",
@@ -752,13 +752,40 @@ def boston():
     # st = dectreeviz(regr.tree_, data, boston.target)
     st = dtreeviz(regr, data, boston.target, target_name='price',
                   feature_names=data.columns, orientation="TD",
-                  show_edge_labels=False,
+
                   fancy=True)
 
     with open("/tmp/t3.dot", "w") as f:
         f.write(st.source)
 
     return st
+
+def diabetes():
+    diabetes = load_diabetes()
+
+    regr = tree.DecisionTreeRegressor(max_depth=3, random_state=666)
+    regr = regr.fit(diabetes.data, diabetes.target)
+
+    st = dtreeviz(regr, diabetes.data, diabetes.target, target_name='disease progression',
+                  feature_names=diabetes.feature_names, orientation="LR",
+                  fancy=True)
+
+    return st
+
+def sweets():
+    sweets = pd.read_csv("../../testdata/sweetrs.csv")
+
+    X, y = sweets.drop('rating', axis=1), sweets['rating']
+
+    regr = tree.DecisionTreeRegressor(max_depth=2, random_state=666)
+    regr = regr.fit(X, y)
+
+    st = dtreeviz(regr, X, y, target_name='rating',
+                  feature_names=sweets.columns, orientation="TD",
+                  fancy=True)
+
+    return st
+
 
 def iris():
     clf = tree.DecisionTreeClassifier(max_depth=3, random_state=666)
@@ -775,7 +802,7 @@ def iris():
     st = dtreeviz(clf, data, iris.target,target_name='variety',
                   feature_names=data.columns, orientation="TD",
                   class_names=["setosa", "versicolor", "virginica"], # 0,1,2 targets
-                  fancy=True, show_edge_labels=False)
+                  fancy=True)
     #print(st)
 
     with open("/tmp/t3.dot", "w") as f:
@@ -800,7 +827,7 @@ def digits():
     st = dtreeviz(clf, data, digits.target,target_name='number',
                   feature_names=data.columns, orientation="TD",
                   class_names=[chr(c) for c in range(ord('0'),ord('9')+1)],
-                  fancy=True, show_edge_labels=False, histtype='bar')
+                  fancy=True, histtype='bar')
     #print(st)
 
     with open("/tmp/t3.dot", "w") as f:
@@ -823,7 +850,7 @@ def wine():
     st = dtreeviz(clf, data, wine.target,target_name='wine',
                   feature_names=data.columns, orientation="TD",
                   class_names=list(wine.target_names),
-                  fancy=True, show_edge_labels=False)
+                  fancy=True)
     #print(st)
 
     with open("/tmp/t3.dot", "w") as f:
@@ -846,7 +873,7 @@ def breast_cancer():
     st = dtreeviz(clf, data, cancer.target,target_name='cancer',
                   feature_names=data.columns, orientation="TD",
                   class_names=list(cancer.target_names),
-                  fancy=True, show_edge_labels=False)
+                  fancy=True)
     #print(st)
 
     with open("/tmp/t3.dot", "w") as f:
@@ -868,7 +895,7 @@ def knowledge():
     st = dtreeviz(clf, X_train, y_train, target_name='UNS',
                   feature_names=cancer.columns.values, orientation="TD",
                   class_names=target_names,
-                  fancy=True, show_edge_labels=False)
+                  fancy=True)
     #print(st)
 
     with open("/tmp/t3.dot", "w") as f:
@@ -885,7 +912,9 @@ def knowledge():
 #st = knowledge()
 #st = digits()
 
-st = boston()
+#st = boston()
+#st = diabetes()
+st = sweets()
 st.view()
 
 
