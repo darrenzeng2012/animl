@@ -38,14 +38,40 @@ color_blind_friendly_colors = [
     ["#fefecd",'#c7e9b4','#41b6c4','#74add1','#4575b4','#313695','#fee090','#fdae61','#f46d43','#d73027'] # 10
 ]
 
-def dtreeviz(tree_model, X_train, y_train, feature_names, target_name,
-             class_names : List[str] = None, # required if classifier
+def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifier),
+             X_train : (pd.DataFrame, np.ndarray),
+             y_train : (pd.Series, np.ndarray),
+             feature_names : List[str],
+             target_name : str,
+             class_names : (Mapping[Number,str],List[str]) = None, # required if classifier
              precision  : int = 1,
-             orientation : str ="TD",
+             orientation : ('TD','LR') ="TD",
              show_root_edge_labels : bool = True,
              fancy : bool = True,
              histtype: ('bar', 'barstacked') = 'barstacked')\
         -> str:
+    """
+    Given a decision tree regressor or classifier, create and return a tree visualization
+    using the graphviz (DOT) language.
+
+    :param tree_model: A DecisionTreeRegressor or DecisionTreeClassifier that has been
+                       fit to X_train, y_train.
+    :param X_train: A data frame or 2-D matrix of feature vectors used to train the model.
+    :param y_train: A pandas Series or 1-D vector with target values or classes.
+    :param feature_names: A list of the feature names.
+    :param target_name: The name of the target variable.
+    :param class_names: [For classifiers] A dictionary or list of strings mapping class
+                        value with class name.
+    :param precision: When displaying floating-point numbers, how many digits to display
+                      after the decimal point.
+    :param orientation:  Is the tree top down, "TD", or left to right, "LR"?
+    :param show_root_edge_labels: Include < and >= on the edges emanating from the root?
+    :param fancy:
+    :param histtype: [For classifiers] Either 'bar' or 'barstacked' to indicate
+                     histogram type. We find that 'barstacked' looks great up to about.
+                     four classes.
+    :return: A string in graphviz DOT language that describes the decision tree.
+    """
     def round(v,ndigits=precision):
         return format(v, '.' + str(ndigits) + 'f')
 
