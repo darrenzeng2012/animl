@@ -14,6 +14,7 @@ from numbers import Number
 import matplotlib.patches as patches
 from scipy import stats
 from sklearn.neighbors import KernelDensity
+import tempfile
 
 YELLOW = "#fefecd" # "#fbfbd0" # "#FBFEB0"
 BLUE = "#D9E6F5"
@@ -46,7 +47,7 @@ max_class_colors = len(color_blind_friendly_colors)-1
 def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_names=None,
              precision=1, orientation="TD", show_root_edge_labels=True,
              fancy=True,
-             histtype: ('bar', 'barstacked') = 'barstacked'):
+             histtype: ('bar', 'barstacked') = 'barstacked') -> str:
     def round(v,ndigits=precision):
         return format(v, '.' + str(ndigits) + 'f')
 
@@ -58,11 +59,11 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         return node_name
 
     def split_node(name, node_name, split):
-        img_shape = get_SVG_shape(f"/tmp/node{node.id}.svg")
+        img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
         if fancy:
             html = f"""<table border="0">
             <tr>
-                    <td port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="/tmp/node{node.id}.svg"/></td>
+                    <td port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}.svg"/></td>
             </tr>
             </table>"""
         else:
@@ -72,12 +73,12 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
 
 
     def regr_leaf_node(node):
-        img_shape = get_SVG_shape(f"/tmp/node{node.id}.svg")
+        img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
         value = node.prediction()
         if fancy:
             html = f"""<table border="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
             <tr>
-                    <td colspan="3" port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="/tmp/node{node.id}.svg"/></td>
+                    <td colspan="3" port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}.svg"/></td>
             </tr>
             </table>"""
             return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
@@ -134,7 +135,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         for i,cl in enumerate(class_values):
             html = f"""
             <tr>
-                <td border="0" cellspacing="0" cellpadding="0"><img src="/tmp/legend{i}.svg"/></td>
+                <td border="0" cellspacing="0" cellpadding="0"><img src="{tmp}/legend{i}.svg"/></td>
                 <td align="left"><font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">{class_names[cl]}</font></td>
             </tr>
             """
@@ -164,6 +165,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
     if orientation=="TD":
         ranksep = ".4"
 
+    tmp = tempfile.gettempdir()
 
     shadow_tree = ShadowDecTree(tree_model, X_train, y_train,
                                 feature_names=feature_names, class_names=class_names)
@@ -182,7 +184,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
     y_range = (min(y_train)*1.03, max(y_train)*1.03) # same y axis for all
 
     if shadow_tree.isclassifier():
-        draw_legend_boxes(shadow_tree, "/tmp/legend")
+        draw_legend_boxes(shadow_tree, f"{tmp}/legend")
 
     if isinstance(X_train,pd.DataFrame):
         X_train = X_train.values
@@ -198,7 +200,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
     for node in shadow_tree.internal:
         if shadow_tree.isclassifier():
             class_split_viz(node, X_train, y_train,
-                            filename=f"/tmp/node{node.id}.svg",
+                            filename=f"{tmp}/node{node.id}.svg",
                             target_name=target_name,
                             precision=precision,
                             colors=colors,
@@ -206,7 +208,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
                             node_heights=node_heights)
         else:
             regr_split_viz(node, X_train, y_train,
-                           filename=f"/tmp/node{node.id}.svg",
+                           filename=f"{tmp}/node{node.id}.svg",
                            target_name=target_name,
                            y_range=y_range,
                            show_ylabel=node == shadow_tree.root,
@@ -220,7 +222,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
 
     leaves = []
     for node in shadow_tree.leaves:
-        regr_leaf_viz(node, y_train, target_name=target_name, filename=f"/tmp/node{node.id}.svg",
+        regr_leaf_viz(node, y_train, target_name=target_name, filename=f"{tmp}/node{node.id}.svg",
                       y_range=y_range, precision=precision)
 
         if shadow_tree.isclassifier():
@@ -284,7 +286,7 @@ digraph G {{splines=line;
 }}
     """
 
-    return graphviz.Source(st)
+    return st
 
 
 def class_split_viz(node: ShadowDecTreeNode,
@@ -550,42 +552,7 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
     left, right = node.split_samples()
     left = y[left]
     right = y[right]
-    # ax.plot([min(X_feature),split],[np.mean(left),np.mean(left)],'--', color=GREY, linewidth=.5)
     ax.plot([0,len(node.samples())],[m,m],'--', color=GREY, linewidth=.5)
-    # ax.plot([split,max(X_feature)],[np.mean(right),np.mean(right)],'--', color=GREY, linewidth=.5)
-
-    # --------
-
-    if False:
-        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
-        # plt.subplots_adjust(wspace=5)
-        axes[0].set_ylim(y_range)
-        axes[0].tick_params(axis='both', which='major', width=.3, labelcolor=GREY, labelsize=ticks_fontsize)
-        axes[0].spines['top'].set_linewidth(.3)
-        axes[0].spines['right'].set_linewidth(.3)
-        axes[0].spines['left'].set_linewidth(.3)
-        axes[0].spines['bottom'].set_linewidth(.3)
-
-        meanprops = {'linewidth': .5, 'linestyle': '-', 'color': 'black'}
-        bp = axes[0].boxplot(y, labels=[target_name],
-                            notch=False, medianprops={'linewidth': 0}, meanprops=meanprops,
-                            widths=[.8], showmeans=True, meanline=True, sym='', patch_artist=True)
-        for patch in bp['boxes']:
-            patch.set(facecolor='#225ea8', alpha=.6)
-
-        axes[1].yaxis.tick_right()
-        axes[1].set_ylim(0, len(node.shadowtree.X_train))
-        axes[1].bar(0, node.nsamples(), color=LIGHTORANGE, tick_label="n")
-        axes[1].axhline(node.nsamples(), color=GREY, linewidth=.5)
-        axes[1].tick_params(axis='both', which='major', width=.3, labelcolor=GREY, labelsize=ticks_fontsize)
-        axes[1].spines['top'].set_linewidth(.3)
-        axes[1].spines['right'].set_linewidth(.3)
-        axes[1].spines['left'].set_linewidth(.3)
-        axes[1].spines['bottom'].set_linewidth(.3)
-
-        for ax in axes:
-            for tick in ax.xaxis.get_major_ticks():
-                tick.label.set_fontsize(label_fontsize)
 
     plt.tight_layout()
     if filename is not None:
@@ -737,202 +704,4 @@ def get_SVG_shape(filename):
                     if len(a)==2:
                         d[a[0]] = a[1].strip('"').strip('pt')
                 return float(d['width']), float(d['height'])
-
-
-
-def boston():
-    regr = tree.DecisionTreeRegressor(max_depth=3, random_state=666)
-    boston = load_boston()
-
-    data = pd.DataFrame(boston.data)
-    data.columns = boston.feature_names
-
-    regr = regr.fit(data, boston.target)
-
-    # st = dectreeviz(regr.tree_, data, boston.target)
-    st = dtreeviz(regr, data, boston.target, target_name='price',
-                  feature_names=data.columns, orientation="TD",
-
-                  fancy=True)
-
-    with open("/tmp/t3.dot", "w") as f:
-        f.write(st.source)
-
-    return st
-
-def diabetes():
-    diabetes = load_diabetes()
-
-    regr = tree.DecisionTreeRegressor(max_depth=3, random_state=666)
-    regr = regr.fit(diabetes.data, diabetes.target)
-
-    st = dtreeviz(regr, diabetes.data, diabetes.target, target_name='disease progression',
-                  feature_names=diabetes.feature_names, orientation="LR",
-                  fancy=True)
-
-    return st
-
-def sweets():
-    sweets = pd.read_csv("../../testdata/sweetrs.csv")
-
-    X, y = sweets.drop('rating', axis=1), sweets['rating']
-
-    regr = tree.DecisionTreeRegressor(max_depth=2, random_state=666)
-    regr = regr.fit(X, y)
-
-    st = dtreeviz(regr, X, y, target_name='rating',
-                  feature_names=sweets.columns, orientation="TD",
-                  fancy=True)
-
-    return st
-
-def fires():
-    fires = pd.read_csv("../../testdata/forestfires.csv")
-    fires['month'] = fires['month'].astype('category').cat.as_ordered()
-    fires['month'] = fires['month'].cat.codes + 1
-    fires['day'] = fires['day'].astype('category').cat.as_ordered()
-    fires['day'] = fires['day'].cat.codes + 1
-
-    X, y = fires.drop('area', axis=1), fires['area']
-
-    regr = tree.DecisionTreeRegressor(max_depth=2, random_state=666)
-    regr = regr.fit(X, y)
-
-    st = dtreeviz(regr, X, y, target_name='area',
-                  feature_names=fires.columns, orientation="TD",
-                  fancy=True)
-
-    return st
-
-def iris():
-    clf = tree.DecisionTreeClassifier(max_depth=3, random_state=666)
-    iris = load_iris()
-
-    #print(iris.data.shape, iris.target.shape)
-
-    data = pd.DataFrame(iris.data)
-    data.columns = iris.feature_names
-
-    clf = clf.fit(data, iris.target)
-
-    # st = dectreeviz(clf.tree_, data, boston.target)
-    st = dtreeviz(clf, data, iris.target,target_name='variety',
-                  feature_names=data.columns, orientation="TD",
-                  class_names=["setosa", "versicolor", "virginica"], # 0,1,2 targets
-                  fancy=True)
-    #print(st)
-
-    with open("/tmp/t3.dot", "w") as f:
-        f.write(st.source)
-
-    #print(clf.tree_.value)
-    return st
-
-def digits():
-    clf = tree.DecisionTreeClassifier(max_depth=4, random_state=666)
-    digits = load_digits()
-
-    #print(iris.data.shape, iris.target.shape)
-
-    data = pd.DataFrame(digits.data)
-    "8x8 image of integer pixels in the range 0..16."
-    data.columns = [f'pixel[{i},{j}]' for i in range(8) for j in range(8)]
-
-    clf = clf.fit(data, digits.target)
-
-    # st = dectreeviz(clf.tree_, data, boston.target)
-    st = dtreeviz(clf, data, digits.target,target_name='number',
-                  feature_names=data.columns, orientation="TD",
-                  class_names=[chr(c) for c in range(ord('0'),ord('9')+1)],
-                  fancy=True, histtype='bar')
-    #print(st)
-
-    with open("/tmp/t3.dot", "w") as f:
-        f.write(st.source)
-
-    #print(clf.tree_.value)
-    return st
-
-def wine():
-    clf = tree.DecisionTreeClassifier(max_depth=4, random_state=666)
-    wine = load_wine()
-
-    #print(iris.data.shape, iris.target.shape)
-
-    data = pd.DataFrame(wine.data)
-    data.columns = wine.feature_names
-
-    clf = clf.fit(data, wine.target)
-
-    st = dtreeviz(clf, data, wine.target,target_name='wine',
-                  feature_names=data.columns, orientation="TD",
-                  class_names=list(wine.target_names),
-                  fancy=True)
-    #print(st)
-
-    with open("/tmp/t3.dot", "w") as f:
-        f.write(st.source)
-
-    #print(clf.tree_.value)
-    return st
-
-def breast_cancer():
-    clf = tree.DecisionTreeClassifier(max_depth=4, random_state=666)
-    cancer = load_breast_cancer()
-
-    #print(iris.data.shape, iris.target.shape)
-
-    data = pd.DataFrame(cancer.data)
-    data.columns = cancer.feature_names
-
-    clf = clf.fit(data, cancer.target)
-
-    st = dtreeviz(clf, data, cancer.target,target_name='cancer',
-                  feature_names=data.columns, orientation="TD",
-                  class_names=list(cancer.target_names),
-                  fancy=True)
-    #print(st)
-
-    with open("/tmp/t3.dot", "w") as f:
-        f.write(st.source)
-
-    #print(clf.tree_.value)
-    return st
-
-def knowledge():
-    # data from https://archive.ics.uci.edu/ml/datasets/User+Knowledge+Modeling
-    clf = tree.DecisionTreeClassifier(max_depth=4, random_state=666)
-    cancer = pd.read_csv("../../testdata/knowledge.csv")
-    target_names = ['very_low', 'Low', 'Middle', 'High']
-    cancer['UNS'] = cancer['UNS'].map({n: i for i, n in enumerate(target_names)})
-
-    X_train, y_train = cancer.drop('UNS', axis=1), cancer['UNS']
-    clf = clf.fit(X_train, y_train)
-
-    st = dtreeviz(clf, X_train, y_train, target_name='UNS',
-                  feature_names=cancer.columns.values, orientation="TD",
-                  class_names=target_names,
-                  fancy=True)
-    #print(st)
-
-    with open("/tmp/t3.dot", "w") as f:
-        f.write(st.source)
-
-    #print(clf.tree_.value)
-    return st
-
-
-
-#st = iris()
-#st = wine()
-#st = breast_cancer()
-#st = knowledge()
-#st = digits()
-
-#st = boston()
-#st = diabetes()
-#st = sweets()
-st = fires()
-st.view()
-
 
