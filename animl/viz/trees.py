@@ -86,10 +86,6 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
 
     def class_leaf_node(node, label_fontsize: int = 12):
         counts = node.class_counts()
-        predicted_class = np.argmax(counts)
-        predicted = predicted_class
-        if class_names is not None:
-            predicted = class_names[predicted_class]
         n_nonzero = np.count_nonzero(counts)
         ratios = counts / node.nsamples()  # convert counts to ratios totalling 1.0
         ratios = [round(r, 3) for r in ratios]
@@ -101,7 +97,6 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         if n_nonzero==1: # make pure
             i = np.nonzero(counts)[0][0]
             color_spec = color_values[i]
-        #width = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts(), output_range=(.2,.8))
         width = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts(), output_range=(.15,.85))
         style = 'wedged' if n_classes <= max_class_colors and n_nonzero>1 else 'filled'
         adjust = ""
@@ -175,8 +170,6 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         class_values = shadow_tree.unique_target_values
         colors = {v:color_values[i] for i,v in enumerate(class_values)}
 
-    #figsize = (4.5, 2)
-
     y_range = (min(y_train)*1.03, max(y_train)*1.03) # same y axis for all
 
     if shadow_tree.isclassifier():
@@ -197,7 +190,6 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         if shadow_tree.isclassifier():
             class_split_viz(node, X_train, y_train,
                             filename=f"{tmp}/node{node.id}.svg",
-                            target_name=target_name,
                             precision=precision,
                             colors=colors,
                             histtype=histtype,
@@ -207,10 +199,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
                            filename=f"{tmp}/node{node.id}.svg",
                            target_name=target_name,
                            y_range=y_range,
-                           show_ylabel=node == shadow_tree.root,
-                           showx=True,
-                           precision=precision,
-                           colors=colors)
+                           precision=precision)
 
         nname = node_name(node)
         gr_node = split_node(node.feature_name(), nname, split=round(node.split()))
@@ -234,6 +223,9 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
     elif fancy:
         fromport = ":img:e"
         toport = ":img:w"
+
+    if shadow_tree.isclassifier():
+        fromport = toport = ""
 
     show_edge_labels = False
     all_llabel = '&lt;' if show_edge_labels else ''
@@ -289,11 +281,9 @@ digraph G {{
 def class_split_viz(node: ShadowDecTreeNode,
                     X: np.ndarray,
                     y: np.ndarray,
-                    target_name: str,
                     colors: Mapping[int, str],
                     node_heights,
                     filename: str = None,
-                    figsize: Tuple[Number, Number] = None,
                     ticks_fontsize: int = 8,
                     label_fontsize: int = 9,
                     precision=1,
@@ -329,9 +319,6 @@ def class_split_viz(node: ShadowDecTreeNode,
     X_hist = [X_feature[y==cl] for cl in class_values]
     X_colors = [colors[cl] for cl in class_values]
     binwidth = r / nbins
-    # print(f"{nbins} bins, binwidth for feature {node.feature_name()} is {binwidth}")
-    # print(np.arange(overall_feature_range[0], overall_feature_range[1] + binwidth,
-    #                  binwidth))
 
     hist, bins, barcontainers = ax.hist(X_hist,
                                         color=X_colors,
@@ -343,10 +330,7 @@ def class_split_viz(node: ShadowDecTreeNode,
     ax.set_xlim(*overall_feature_range)
     ax.set_xticks(overall_feature_range)
     ax.set_yticks([0,max([max(h) for h in hist])])
-    #ax.set_xticks(np.arange(*feature_range), (feature_range[1]-feature_range[0])/10.0)
     ax.tick_params(axis='both', which='major', width=.3, labelcolor=GREY, labelsize=ticks_fontsize)
-    # ax.tick_params(direction='out', width=.3, colors=GREY, labelsize=40)
-    # ax.tick_params(colors=GREY)
 
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
@@ -387,11 +371,7 @@ def regr_split_viz(node: ShadowDecTreeNode,
                    X: np.ndarray,
                    y: np.ndarray,
                    target_name: str,
-                   colors: Mapping[int, str],
                    filename: str = None,
-                   showx=True,
-                   showy=True,
-                   show_ylabel=True,
                    y_range=None,
                    ticks_fontsize: int = 8,
                    label_fontsize: int = 9,
@@ -438,75 +418,6 @@ def regr_split_viz(node: ShadowDecTreeNode,
     if filename is not None:
         plt.savefig(filename, bbox_inches='tight', pad_inches=0)
         plt.close()
-
-
-def kde_class_split_viz(node: ShadowDecTreeNode,
-                        X: (pd.DataFrame, np.ndarray),
-                        y: (pd.Series, np.ndarray),
-                        colors: Mapping[int, str],
-                        feature_name,
-                        label_fontsize: int = 20,
-                        precision=1):
-    fig, ax = plt.subplots(1, 1, figsize=(7.5, 3.5))
-    ax.set_xlabel(f"{feature_name}", fontsize=label_fontsize, fontname="Arial",
-                  color=GREY)
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-
-    n_classes = node.shadowtree.nclasses()
-
-    class_values = node.shadowtree.unique_target_values
-    X_hist = [X[y==cl] for cl in class_values]
-    X_colors = [colors[cl] for cl in class_values]
-
-    i_splitvar = node.feature()
-    splitval = node.split()
-    for cl in range(n_classes):
-        X = X_hist[cl]
-        if len(X)==1:
-            X_hist[cl] = np.array([X[0],X[0]])
-    ranges = {cl:(np.min(X_hist[cl]), np.max(X_hist[cl]))
-              for cl in range(n_classes) if len(X_hist[cl])>1}
-
-    use_stats = True
-    for cl in range(n_classes):
-        n = len(X_hist[cl])
-        if cl not in ranges:
-            continue
-        else:
-            r = ranges[cl]
-        x_grid = np.linspace(r[0] - r[0] * .25, r[1] * 1.25, 1000)
-        if use_stats:
-            d = 1
-            bw = (n * (d + 2) / 4.) ** (-1. / (d + 4))
-            bw = n ** (-1. / (d + 4))
-            kernel = stats.gaussian_kde(X_hist[cl], bw_method=bw)
-            heights = kernel.evaluate(x_grid)
-        else:
-            d = 1
-            bw = (n * (d + 2) / 4.) ** (-1. / (d + 4))
-            bw /= 6
-            kde = KernelDensity(kernel='gaussian', bandwidth=bw).fit(X.reshape(-1, 1))
-            log_dens = kde.score_samples(x_grid.reshape(-1, 1))
-            heights = np.exp(log_dens)
-        #     print(heights)
-        plt.plot(x_grid, heights, linewidth=.5, color=GREY)
-        plt.fill(x_grid, heights, alpha=.6, color=X_colors[cl])
-    xmin, xmax = ax.get_xlim()
-    ymin, ymax = ax.get_ylim()
-    xr = xmax-xmin
-    yr = ymax-ymin
-    th = yr*.05
-    tw = xr*.02
-    tria = np.array([[splitval, 0], [splitval - tw, -th], [splitval + tw, -th]])
-    t = patches.Polygon(tria, linewidth=.5, edgecolor=GREY,
-                        facecolor=GREY)
-    t.set_clip_on(False)
-    ax.add_patch(t)
-    plt.ylim(0.0, ymax)
-    ax.set_xticks([])
-    ax.yaxis.set_visible(False)
 
 
 def regr_leaf_viz(node : ShadowDecTreeNode,
@@ -563,37 +474,6 @@ def draw_legend_boxes(shadow_tree, basefilename):
 
     for i, c in enumerate(class_values):
         draw_colored_box(colors[c], f"{basefilename}{i}.svg")
-
-
-def draw_legend(shadow_tree, filename):
-    "Unused since we can't get accurate size measurement for HTML label on node."
-    fig, ax = plt.subplots(1, 1, figsize=(.1,.1))
-    boxes = []
-
-    n_classes = shadow_tree.nclasses()
-    class_values = shadow_tree.unique_target_values
-    class_names = shadow_tree.class_names
-    color_values = color_blind_friendly_colors[n_classes]
-    colors = {v:color_values[i] for i,v in enumerate(class_values)}
-
-    for i, c in enumerate(class_values):
-        b = patches.Rectangle((0, 0), 0, 0, linewidth=1.2, edgecolor='grey',
-                                 facecolor=colors[c], label=class_names[c])
-        boxes.append(b)
-    ax.legend(handles=boxes,
-              frameon=False,
-              loc='center',
-              edgecolor='red',
-              fontsize=18)
-
-    ax.set_xlim(0, 0.01)
-    ax.set_ylim(0, 0.01)
-    ax.axis('off')
-    ax.xaxis.set_visible(False)
-    ax.yaxis.set_visible(False)
-
-    plt.savefig(filename, bbox_inches='tight', pad_inches=0)
-    plt.close()
 
 
 def draw_colored_box(color,filename):
