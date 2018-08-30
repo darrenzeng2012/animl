@@ -38,12 +38,14 @@ color_blind_friendly_colors = [
     ["#fefecd",'#c7e9b4','#41b6c4','#74add1','#4575b4','#313695','#fee090','#fdae61','#f46d43','#d73027'] # 10
 ]
 
-max_class_colors = len(color_blind_friendly_colors)-1
-
-def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_names=None,
-             precision=1, orientation="TD", show_root_edge_labels=True,
-             fancy=True,
-             histtype: ('bar', 'barstacked') = 'barstacked') -> str:
+def dtreeviz(tree_model, X_train, y_train, feature_names, target_name,
+             class_names : List[str] = None, # required if classifier
+             precision  : int = 1,
+             orientation : str ="TD",
+             show_root_edge_labels : bool = True,
+             fancy : bool = True,
+             histtype: ('bar', 'barstacked') = 'barstacked')\
+        -> str:
     def round(v,ndigits=precision):
         return format(v, '.' + str(ndigits) + 'f')
 
@@ -92,6 +94,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
         color_spec = ["{c};{r}".format(c=color_values[i], r=r) for i, r in
                       enumerate(ratios)]
         color_spec = ':'.join(color_spec)
+        max_class_colors = len(color_blind_friendly_colors) - 1
         if n_classes > max_class_colors:
             color_spec = LIGHTBLUE
         if n_nonzero==1: # make pure
