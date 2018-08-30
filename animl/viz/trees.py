@@ -395,7 +395,7 @@ def regr_split_viz(node: ShadowDecTreeNode,
                    ticks_fontsize: int = 8,
                    label_fontsize: int = 9,
                    precision=1):
-    figsize = (3, 1.3)
+    figsize = (2.5, 1.1)
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     ax.tick_params(colors=GREY)
 
@@ -520,7 +520,7 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
     samples = node.samples()
     y = y[samples]
 
-    figsize = (3, 1.3)
+    figsize = (1.6,.8)
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     ax.tick_params(colors=GREY)
 
