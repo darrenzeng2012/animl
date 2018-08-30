@@ -72,11 +72,12 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
 
 
     def regr_leaf_node(node):
+        img_shape = get_SVG_shape(f"/tmp/node{node.id}.svg")
         value = node.prediction()
         if fancy:
             html = f"""<table border="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
             <tr>
-                    <td colspan="3" port="img" fixedsize="true" width="87" height="90"><img src="/tmp/node{node.id}.svg"/></td>
+                    <td colspan="3" port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="/tmp/node{node.id}.svg"/></td>
             </tr>
             </table>"""
             return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
@@ -211,8 +212,7 @@ def dtreeviz(tree_model, X_train, y_train, feature_names, target_name, class_nam
                            show_ylabel=node == shadow_tree.root,
                            showx=True,
                            precision=precision,
-                           colors=colors,
-                           histtype=histtype)
+                           colors=colors)
 
         nname = node_name(node)
         gr_node = split_node(node.feature_name(), nname, split=round(node.split()))
@@ -297,7 +297,6 @@ def class_split_viz(node: ShadowDecTreeNode,
                     label_fontsize: int = 9,
                     precision=1,
                     histtype: ('bar', 'barstacked') = 'barstacked'):
-    # fig, ax = plt.subplots(1, 1, figsize=figsize)
     height_range = (.5, 1.5)
     h = prop_size(n=node_heights[node.id], counts=node_heights.values(), output_range=height_range)
     figsize=(3.3, h)
@@ -378,7 +377,6 @@ def class_split_viz(node: ShadowDecTreeNode,
             rect.set_linewidth(.5)
             rect.set_edgecolor(GREY)
 
-    #plt.tight_layout()
     if filename is not None:
         plt.savefig(filename, bbox_inches='tight', pad_inches=0)
         plt.close()
@@ -394,51 +392,38 @@ def regr_split_viz(node: ShadowDecTreeNode,
                    showy=True,
                    show_ylabel=True,
                    y_range=None,
-                   figsize: Tuple[Number, Number] = None,
-                   ticks_fontsize: int = 18,
-                   label_fontsize: int = 20,
-                   precision=1,
-                   histtype: ('bar', 'barstacked') = 'barstacked'):
+                   ticks_fontsize: int = 8,
+                   label_fontsize: int = 9,
+                   precision=1):
+    figsize = (3, 1.3)
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     ax.tick_params(colors=GREY)
 
     feature_name = node.feature_name()
-    if show_ylabel: showy=True
-    if showx:
-        ax.set_xlabel(f"{feature_name}@{round(node.split(),precision)}", fontsize=label_fontsize, fontname="Arial", color=GREY)
-    else:
-        ax.xaxis.set_visible(False)
-        ax.set_xticks([])
-    if showy:
-        ax.set_ylim(y_range)
-        if show_ylabel:
-            ax.set_ylabel(target_name, fontsize=label_fontsize, fontname="Arial", color=GREY)
-    else:
-        ax.yaxis.set_visible(False)
-        ax.set_yticks([])
+    ax.set_xlabel(f"{feature_name}@{round(node.split(),precision)}", fontsize=label_fontsize, fontname="Arial", color=GREY)
+    ax.set_ylim(y_range)
+    if node==node.shadowtree.root:
+        ax.set_ylabel(target_name, fontsize=label_fontsize, fontname="Arial", color=GREY)
 
-    if not showx and not showy:
-        ax.axis('off')
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_linewidth(.3)
+    ax.spines['bottom'].set_linewidth(.3)
+    ax.tick_params(axis='both', which='major', width=.3, labelcolor=GREY, labelsize=ticks_fontsize)
 
     # Get X, y data for all samples associated with this node.
     X_feature = X[:,node.feature()]
     X_feature, y = X_feature[node.samples()], y[node.samples()]
 
-    fig, ax = plt.subplots(1, 1, figsize=figsize)
-    ax.tick_params(colors=GREY)
-
-    ax.tick_params(axis='both', which='major', labelsize=ticks_fontsize)
-
-    ax.scatter(X_feature, y, s=3, c=LIGHTBLUE, alpha=1.0)
+    ax.scatter(X_feature, y, s=5, c='#225ea8', alpha=.4)
     left, right = node.split_samples()
     left = y[left]
     right = y[right]
     split = node.split()
-    ax.plot([min(X_feature),split],[np.mean(left),np.mean(left)],'--', color=GREY, linewidth=1.6)
-    ax.plot([split,split],[min(y),max(y)],'--', color=GREY, linewidth=1.6)
-    ax.plot([split,max(X_feature)],[np.mean(right),np.mean(right)],'--', color=GREY, linewidth=1.6)
+    ax.plot([min(X_feature),split],[np.mean(left),np.mean(left)],'--', color=GREY, linewidth=.5)
+    ax.plot([split,split],[min(y),max(y)],'--', color=GREY, linewidth=.5)
+    ax.plot([split,max(X_feature)],[np.mean(right),np.mean(right)],'--', color=GREY, linewidth=.5)
 
-    #plt.tight_layout()
     if filename is not None:
         plt.savefig(filename, bbox_inches='tight', pad_inches=0)
         plt.close()
@@ -459,7 +444,6 @@ def kde_class_split_viz(node: ShadowDecTreeNode,
     ax.spines['left'].set_visible(False)
 
     n_classes = node.shadowtree.nclasses()
-    class_names = node.shadowtree.class_names
 
     class_values = node.shadowtree.unique_target_values
     X_hist = [X[y==cl] for cl in class_values]
@@ -496,7 +480,7 @@ def kde_class_split_viz(node: ShadowDecTreeNode,
             log_dens = kde.score_samples(x_grid.reshape(-1, 1))
             heights = np.exp(log_dens)
         #     print(heights)
-        plt.plot(x_grid, heights, linewidth=.8, color=GREY)
+        plt.plot(x_grid, heights, linewidth=.5, color=GREY)
         plt.fill(x_grid, heights, alpha=.6, color=X_colors[cl])
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
@@ -505,7 +489,7 @@ def kde_class_split_viz(node: ShadowDecTreeNode,
     th = yr*.05
     tw = xr*.02
     tria = np.array([[splitval, 0], [splitval - tw, -th], [splitval + tw, -th]])
-    t = patches.Polygon(tria, linewidth=1.2, edgecolor=GREY,
+    t = patches.Polygon(tria, linewidth=.5, edgecolor=GREY,
                         facecolor=GREY)
     t.set_clip_on(False)
     ax.add_patch(t)
@@ -520,34 +504,119 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
                   filename:str=None,
                   y_range=None,
                   precision=1,
-                  figsize:Tuple[Number,Number]=(2.9, 3.0),
-                  label_fontsize:int=28,
-                  ticks_fontsize: int = 24):
-    if isinstance(y,pd.Series):
-        y = y.values
+                  figsize:Tuple[Number,Number]=(1.35, 1.4),
+                  label_fontsize:int=9,
+                  ticks_fontsize: int = 8):
+    samples = node.samples()
+    y = y[samples]
 
+    figsize = (3, 1.3)
+    fig, ax = plt.subplots(1, 1, figsize=figsize)
+    ax.tick_params(colors=GREY)
+
+    m = np.mean(y)
+
+    ax.set_ylim(y_range)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_linewidth(.3)
+    ax.set_xticks([])
+    # ax.xaxis.set_visible(False)
+    ax.set_xlabel(f"{target_name}={round(m,precision)}", fontsize=label_fontsize, fontname="Arial", color=GREY)
+    ax.tick_params(axis='y', which='major', width=.3, labelcolor=GREY, labelsize=ticks_fontsize)
+
+    # Get X, y data for all samples associated with this node.
+    X = range(0,len(node.samples()))
+
+    ax.scatter(X, y, s=5, c='#225ea8', alpha=.4)
+    left, right = node.split_samples()
+    left = y[left]
+    right = y[right]
+    # ax.plot([min(X_feature),split],[np.mean(left),np.mean(left)],'--', color=GREY, linewidth=.5)
+    ax.plot([0,len(node.samples())],[m,m],'--', color=GREY, linewidth=.5)
+    # ax.plot([split,max(X_feature)],[np.mean(right),np.mean(right)],'--', color=GREY, linewidth=.5)
+
+    # --------
+
+    if False:
+        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+        # plt.subplots_adjust(wspace=5)
+        axes[0].set_ylim(y_range)
+        axes[0].tick_params(axis='both', which='major', width=.3, labelcolor=GREY, labelsize=ticks_fontsize)
+        axes[0].spines['top'].set_linewidth(.3)
+        axes[0].spines['right'].set_linewidth(.3)
+        axes[0].spines['left'].set_linewidth(.3)
+        axes[0].spines['bottom'].set_linewidth(.3)
+
+        meanprops = {'linewidth': .5, 'linestyle': '-', 'color': 'black'}
+        bp = axes[0].boxplot(y, labels=[target_name],
+                            notch=False, medianprops={'linewidth': 0}, meanprops=meanprops,
+                            widths=[.8], showmeans=True, meanline=True, sym='', patch_artist=True)
+        for patch in bp['boxes']:
+            patch.set(facecolor='#225ea8', alpha=.6)
+
+        axes[1].yaxis.tick_right()
+        axes[1].set_ylim(0, len(node.shadowtree.X_train))
+        axes[1].bar(0, node.nsamples(), color=LIGHTORANGE, tick_label="n")
+        axes[1].axhline(node.nsamples(), color=GREY, linewidth=.5)
+        axes[1].tick_params(axis='both', which='major', width=.3, labelcolor=GREY, labelsize=ticks_fontsize)
+        axes[1].spines['top'].set_linewidth(.3)
+        axes[1].spines['right'].set_linewidth(.3)
+        axes[1].spines['left'].set_linewidth(.3)
+        axes[1].spines['bottom'].set_linewidth(.3)
+
+        for ax in axes:
+            for tick in ax.xaxis.get_major_ticks():
+                tick.label.set_fontsize(label_fontsize)
+
+    plt.tight_layout()
+    if filename is not None:
+        plt.savefig(filename, bbox_inches='tight', pad_inches=0)
+        plt.close()
+
+
+def old_regr_leaf_viz(node : ShadowDecTreeNode,
+                  y : (pd.Series,np.ndarray),
+                  target_name,
+                  filename:str=None,
+                  y_range=None,
+                  precision=1,
+                  figsize:Tuple[Number,Number]=(1.35, 1.4),
+                  label_fontsize:int=9,
+                  ticks_fontsize: int = 7):
     samples = node.samples()
     y = y[samples]
 
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
-    plt.subplots_adjust(wspace=5)
+    # plt.subplots_adjust(wspace=5)
     axes[0].set_ylim(y_range)
-    axes[0].tick_params(axis='x', which='both', labelsize=label_fontsize, colors=GREY)
-    axes[0].tick_params(axis='y', which='both', labelsize=ticks_fontsize, colors=GREY)
+    axes[0].tick_params(axis='both', which='major', width=.3, labelcolor=GREY, labelsize=ticks_fontsize)
+    axes[0].spines['top'].set_linewidth(.3)
+    axes[0].spines['right'].set_linewidth(.3)
+    axes[0].spines['left'].set_linewidth(.3)
+    axes[0].spines['bottom'].set_linewidth(.3)
 
-    meanprops = {'linewidth': 1.2, 'linestyle': '-', 'color': 'black'}
+    meanprops = {'linewidth': .5, 'linestyle': '-', 'color': 'black'}
     bp = axes[0].boxplot(y, labels=[target_name],
                         notch=False, medianprops={'linewidth': 0}, meanprops=meanprops,
                         widths=[.8], showmeans=True, meanline=True, sym='', patch_artist=True)
     for patch in bp['boxes']:
-        patch.set(facecolor=LIGHTBLUE)
+        patch.set(facecolor='#225ea8', alpha=.6)
 
     axes[1].yaxis.tick_right()
-    axes[1].set_ylim(0, 350)
-    axes[1].tick_params(axis='x', which='both', labelsize=label_fontsize, colors=GREY)
-    axes[1].tick_params(axis='y', which='both', labelsize=ticks_fontsize, colors=GREY)
+    axes[1].set_ylim(0, len(node.shadowtree.X_train))
     axes[1].bar(0, node.nsamples(), color=LIGHTORANGE, tick_label="n")
-    axes[1].axhline(node.nsamples(), color=GREY, linewidth=1.2)
+    axes[1].axhline(node.nsamples(), color=GREY, linewidth=.5)
+    axes[1].tick_params(axis='both', which='major', width=.3, labelcolor=GREY, labelsize=ticks_fontsize)
+    axes[1].spines['top'].set_linewidth(.3)
+    axes[1].spines['right'].set_linewidth(.3)
+    axes[1].spines['left'].set_linewidth(.3)
+    axes[1].spines['bottom'].set_linewidth(.3)
+
+    for ax in axes:
+        for tick in ax.xaxis.get_major_ticks():
+            tick.label.set_fontsize(label_fontsize)
 
     plt.tight_layout()
     if filename is not None:
@@ -796,9 +865,10 @@ def knowledge():
 #st = iris()
 #st = wine()
 #st = breast_cancer()
-st = knowledge()
+#st = knowledge()
 #st = digits()
-#st = boston()
+
+st = boston()
 st.view()
-#
+
 
