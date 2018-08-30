@@ -29,7 +29,7 @@ and data paths are set correctly.
 
 # REGRESSION
 
-def viz_boston(orientation="TD", max_depth=3, random_state=666):
+def viz_boston(orientation="TD", max_depth=3, random_state=666, fancy=True):
     regr = tree.DecisionTreeRegressor(max_depth=max_depth, random_state=random_state)
     boston = load_boston()
 
@@ -38,15 +38,13 @@ def viz_boston(orientation="TD", max_depth=3, random_state=666):
 
     regr = regr.fit(data, boston.target)
 
-    # st = dectreeviz(regr.tree_, data, boston.target)
     st = dtreeviz(regr, data, boston.target, target_name='price',
                   feature_names=data.columns, orientation=orientation,
-
-                  fancy=True)
+                  fancy=fancy)
 
     return st
 
-def viz_diabetes(orientation="TD", max_depth=3, random_state=666):
+def viz_diabetes(orientation="TD", max_depth=3, random_state=666, fancy=True):
     diabetes = load_diabetes()
 
     regr = tree.DecisionTreeRegressor(max_depth=max_depth, random_state=random_state)
@@ -54,11 +52,11 @@ def viz_diabetes(orientation="TD", max_depth=3, random_state=666):
 
     st = dtreeviz(regr, diabetes.data, diabetes.target, target_name='disease progression',
                   feature_names=diabetes.feature_names, orientation=orientation,
-                  fancy=True)
+                  fancy=fancy)
 
     return st
 
-def viz_sweets(orientation="TD", max_depth=3, random_state=666):
+def viz_sweets(orientation="TD", max_depth=3, random_state=666, fancy=True):
     sweets = pd.read_csv("testing/data/sweetrs.csv")
     sweets = sweets.sample(n=2000) # just grab 2000 of 17k
 
@@ -69,11 +67,11 @@ def viz_sweets(orientation="TD", max_depth=3, random_state=666):
 
     st = dtreeviz(regr, X, y, target_name='rating',
                   feature_names=sweets.columns, orientation=orientation,
-                  fancy=True)
+                  fancy=fancy)
 
     return st
 
-def viz_fires(orientation="TD", max_depth=3, random_state=666):
+def viz_fires(orientation="TD", max_depth=3, random_state=666, fancy=True):
     fires = pd.read_csv("testing/data/forestfires.csv")
     fires['month'] = fires['month'].astype('category').cat.as_ordered()
     fires['month'] = fires['month'].cat.codes + 1
@@ -87,14 +85,14 @@ def viz_fires(orientation="TD", max_depth=3, random_state=666):
 
     st = dtreeviz(regr, X, y, target_name='area',
                   feature_names=fires.columns, orientation=orientation,
-                  fancy=True)
+                  fancy=fancy)
 
     return st
 
 
 # CLASSIFICATION
 
-def viz_iris(orientation="TD", max_depth=3, random_state=666):
+def viz_iris(orientation="TD", max_depth=3, random_state=666, fancy=True):
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     iris = load_iris()
 
@@ -106,11 +104,11 @@ def viz_iris(orientation="TD", max_depth=3, random_state=666):
     st = dtreeviz(clf, data, iris.target,target_name='variety',
                   feature_names=data.columns, orientation=orientation,
                   class_names=["setosa", "versicolor", "virginica"], # 0,1,2 targets
-                  fancy=True)
+                  fancy=fancy)
 
     return st
 
-def viz_digits(orientation="TD", max_depth=3, random_state=666):
+def viz_digits(orientation="TD", max_depth=3, random_state=666, fancy=True):
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     digits = load_digits()
 
@@ -126,7 +124,7 @@ def viz_digits(orientation="TD", max_depth=3, random_state=666):
                   fancy=True, histtype='bar')
     return st
 
-def viz_wine(orientation="TD", max_depth=3, random_state=666):
+def viz_wine(orientation="TD", max_depth=3, random_state=666, fancy=True):
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     wine = load_wine()
 
@@ -138,10 +136,10 @@ def viz_wine(orientation="TD", max_depth=3, random_state=666):
     st = dtreeviz(clf, data, wine.target,target_name='wine',
                   feature_names=data.columns, orientation=orientation,
                   class_names=list(wine.target_names),
-                  fancy=True)
+                  fancy=fancy)
     return st
 
-def viz_breast_cancer(orientation="TD", max_depth=3, random_state=666):
+def viz_breast_cancer(orientation="TD", max_depth=3, random_state=666, fancy=True):
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     cancer = load_breast_cancer()
 
@@ -153,10 +151,10 @@ def viz_breast_cancer(orientation="TD", max_depth=3, random_state=666):
     st = dtreeviz(clf, data, cancer.target,target_name='cancer',
                   feature_names=data.columns, orientation=orientation,
                   class_names=list(cancer.target_names),
-                  fancy=True)
+                  fancy=fancy)
     return st
 
-def viz_knowledge(orientation="TD", max_depth=3, random_state=666):
+def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True):
     # data from https://archive.ics.uci.edu/ml/datasets/User+Knowledge+Modeling
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     cancer = pd.read_csv("testing/data/knowledge.csv")
@@ -169,7 +167,7 @@ def viz_knowledge(orientation="TD", max_depth=3, random_state=666):
     st = dtreeviz(clf, X_train, y_train, target_name='UNS',
                   feature_names=cancer.columns.values, orientation=orientation,
                   class_names=target_names,
-                  fancy=True)
+                  fancy=fancy)
     return st
 
 
