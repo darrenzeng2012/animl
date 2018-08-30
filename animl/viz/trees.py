@@ -786,6 +786,23 @@ def sweets():
 
     return st
 
+def fires():
+    fires = pd.read_csv("../../testdata/forestfires.csv")
+    fires['month'] = fires['month'].astype('category').cat.as_ordered()
+    fires['month'] = fires['month'].cat.codes + 1
+    fires['day'] = fires['day'].astype('category').cat.as_ordered()
+    fires['day'] = fires['day'].cat.codes + 1
+
+    X, y = fires.drop('area', axis=1), fires['area']
+
+    regr = tree.DecisionTreeRegressor(max_depth=2, random_state=666)
+    regr = regr.fit(X, y)
+
+    st = dtreeviz(regr, X, y, target_name='area',
+                  feature_names=fires.columns, orientation="TD",
+                  fancy=True)
+
+    return st
 
 def iris():
     clf = tree.DecisionTreeClassifier(max_depth=3, random_state=666)
@@ -914,7 +931,8 @@ def knowledge():
 
 #st = boston()
 #st = diabetes()
-st = sweets()
+#st = sweets()
+st = fires()
 st.view()
 
 
