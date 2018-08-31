@@ -50,7 +50,7 @@ def viz_diabetes(orientation="TD", max_depth=3, random_state=666, fancy=True):
     regr = tree.DecisionTreeRegressor(max_depth=max_depth, random_state=random_state)
     regr = regr.fit(diabetes.data, diabetes.target)
 
-    st = dtreeviz(regr, diabetes.data, diabetes.target, target_name='disease progression',
+    st = dtreeviz(regr, diabetes.data, diabetes.target, target_name='progression',
                   feature_names=diabetes.feature_names, orientation=orientation,
                   fancy=fancy)
 
@@ -171,12 +171,14 @@ def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True):
     return st
 
 
-def save(name, dirname, orientation, max_depth):
-    print(f"Process {name} orientation={orientation} max_depth={max_depth}")
-    st = f(orientation=orientation, max_depth=max_depth)
+def save(name, dirname, orientation, max_depth, fancy=True):
+    print(f"Process {name} orientation={orientation} max_depth={max_depth} fancy={fancy}")
+    st = f(orientation=orientation, max_depth=max_depth, fancy=fancy)
     # Gen both pdf/png
     g = graphviz.Source(st, format='pdf') # can't gen svg as it refs files in tmp dir that disappear
     filename = f"{name}-{orientation}-{max_depth}"
+    if not fancy:
+        filename = filename+"-simple"
     g.render(directory=dirname, filename=filename, view=False, cleanup=True)
 
     # do it the hard way to set dpi for png
@@ -206,3 +208,4 @@ if __name__ == '__main__':
         save(name, dirname, "TD", 2)
         save(name, dirname, "TD", 4)
         save(name, dirname, "LR", 3)
+        save(name, dirname, "TD", 4, fancy=False)

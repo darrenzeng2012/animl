@@ -116,9 +116,8 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
         counts = node.class_counts()
         n_nonzero = np.count_nonzero(counts)
         ratios = counts / node.nsamples()  # convert counts to ratios totalling 1.0
-        ratios = [round(r, 3) for r in ratios]
-        color_spec = ["{c};{r}".format(c=color_values[i], r=r) for i, r in
-                      enumerate(ratios)]
+        ratios = [round(int(r*1000)/1000.0, 3) for r in ratios] # make sure we don't go over 1.0
+        color_spec = [f"{color_values[i]};{r}" for i, r in enumerate(ratios)]
         color_spec = ':'.join(color_spec)
         max_class_colors = len(color_blind_friendly_colors) - 1
         if n_classes > max_class_colors:
