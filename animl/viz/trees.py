@@ -48,7 +48,8 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
              orientation : ('TD','LR') ="TD",
              show_root_edge_labels : bool = True,
              fancy : bool = True,
-             histtype: ('bar', 'barstacked') = 'barstacked')\
+             histtype: ('bar', 'barstacked') = 'barstacked',
+             highlight_path : List[int] = [])\
         -> str:
     """
     Given a decision tree regressor or classifier, create and return a tree visualization
@@ -70,6 +71,8 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
     :param histtype: [For classifiers] Either 'bar' or 'barstacked' to indicate
                      histogram type. We find that 'barstacked' looks great up to about.
                      four classes.
+    :param highlight_path: A list of node IDs to highlight, default is []
+    :type highlight_path: List[int]
     :return: A string in graphviz DOT language that describes the decision tree.
     """
     def round(v,ndigits=precision):
@@ -84,6 +87,7 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
 
     def split_node(name, node_name, split):
         img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
+        highlight = node.id in highlight_path
         if fancy:
             html = f"""<table border="0">
             <tr>
@@ -92,7 +96,10 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
             </table>"""
         else:
             html = f"""<font face="Helvetica" color="#444443" point-size="12">{name}@{split}</font>"""
-        gr_node = f'{node_name} [margin="0" shape=none label=<{html}>]'
+        if highlight:
+            gr_node = f'{node_name} [margin="0" shape=box penwidth=".3" color="{GREY}" style="dashed" label=<{html}>]'
+        else:
+            gr_node = f'{node_name} [margin="0" shape=none label=<{html}>]'
         return gr_node
 
 

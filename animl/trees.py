@@ -10,6 +10,8 @@ from collections import defaultdict, Sequence
 import string
 import re
 from typing import Mapping, List, Tuple
+from numbers import Number
+
 
 class ShadowDecTree:
     """
@@ -30,7 +32,7 @@ class ShadowDecTree:
 
     Parameters
     ----------
-    class_names : (List[str],Mapping[int,str]). A mappingf rom target value
+    class_names : (List[str],Mapping[int,str]). A mapping from target value
                   to target class name. If you pass in a list of strings,
                   target value i must be associated with class name[i]. You
                   can also pass in a dict that maps value to name.
@@ -127,6 +129,32 @@ class ShadowDecTree:
             # print(f"\tmax={np.max(height_of_bins):2.0f}, heights={list(height_of_bins)}, {len(height_of_bins)} bins")
         return node_heights
 
+    def predict(self, x : np.ndarray) -> Tuple[Number,List]:
+        """
+        Given an x-vector of features, return predicted class or value based upon
+        this tree. Also return path from root to leaf as 2nd value in return tuple.
+        Recursively walk down tree from root to appropriate leaf by
+        comparing feature in x to node's split value. Also return
+
+        :param x: Feature vector to run down the tree to a leaf.
+        :type x: np.ndarray
+        :return: Predicted class or value based
+        :rtype: Number
+        """
+        def walk(t, x, path):
+            if t is None:
+                return None
+            path.append(t)
+            if t.isleaf():
+                return t
+            if x[t.feature()] < t.split():
+                return walk(t.left, x, path)
+            return walk(t.right, x, path)
+
+        path = []
+        leaf = walk(self.root, x, path)
+        return leaf.prediction(), path
+
     @staticmethod
     def node_samples(tree_model, data) -> Mapping[int, list]:
         """
@@ -209,14 +237,14 @@ class ShadowDecTreeNode:
     def isclassifier(self):
         return self.shadowtree.tree_model.tree_.n_classes > 1
 
-    def prediction(self) -> (int,None):
+    def prediction(self) -> (Number,None):
         """
         If this is a leaf node, return the predicted continuous value, if this is a
         regressor, or the class number, if this is a classifier.
         """
         if not self.isleaf(): return None
         if self.isclassifier():
-            counts = np.array(tree.value[self.id][0])
+            counts = np.array(self.shadowtree.tree_model.tree_.value[self.id][0])
             predicted_class = np.argmax(counts)
             return predicted_class
         else:
