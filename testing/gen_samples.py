@@ -50,7 +50,7 @@ def viz_diabetes(orientation="TD", max_depth=3, random_state=666, fancy=True):
     regr = tree.DecisionTreeRegressor(max_depth=max_depth, random_state=random_state)
     regr = regr.fit(diabetes.data, diabetes.target)
 
-    st = dtreeviz(regr, diabetes.data, diabetes.target, target_name='progression',
+    st = dtreeviz(regr, diabetes.data, diabetes.target, target_name='progr',
                   feature_names=diabetes.feature_names, orientation=orientation,
                   fancy=fancy)
 
@@ -121,7 +121,7 @@ def viz_digits(orientation="TD", max_depth=3, random_state=666, fancy=True):
     st = dtreeviz(clf, data, digits.target,target_name='number',
                   feature_names=data.columns, orientation=orientation,
                   class_names=[chr(c) for c in range(ord('0'),ord('9')+1)],
-                  fancy=True, histtype='bar')
+                  fancy=fancy, histtype='bar')
     return st
 
 def viz_wine(orientation="TD", max_depth=3, random_state=666, fancy=True):

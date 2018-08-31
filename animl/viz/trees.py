@@ -96,7 +96,7 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
         return gr_node
 
 
-    def regr_leaf_node(node):
+    def regr_leaf_node(node, label_fontsize: int = 12):
         img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
         value = node.prediction()
         if fancy:
@@ -107,10 +107,36 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
             </table>"""
             return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
         else:
-            margin = prop_size(node.nsamples(),
-                               counts=shadow_tree.leaf_sample_counts())
-            html = f"""<font face="Helvetica" color="#444443" point-size="11">{target_name}<br/>{round(value)}</font>"""
-            return f'leaf{node.id} [margin="{margin}" style=filled fillcolor="{YELLOW}" shape=circle label=<{html}>]'
+            width = prop_size(node.nsamples(),
+                              counts=shadow_tree.leaf_sample_counts(),
+                              output_range=(.15,.85))
+            gr = f'leaf{node.id} [fixedsize="true" width="{width}" style=filled fillcolor="{YELLOW}" shape=circle label=""]'
+
+            if orientation == 'TD':
+                labeldistance = "1.2"
+            else:
+                labeldistance = "2.2"
+            # label = f'<font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">n={node.nsamples()}</font>'
+            label = f"""<table border="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
+            <tr>
+                    <td align="left" CELLPADDING="0" CELLSPACING="0"><font face="Helvetica" color="#444443" point-size="11">{target_name}={round(value)}</font></td>
+            </tr>
+            <tr>
+                    <td align="left" CELLPADDING="0" CELLSPACING="0"><font face="Helvetica" color="#444443" point-size="11">n={node.nsamples()}</font></td>
+            </tr>
+            </table>
+            """
+            spacer_width = .15 * (1 / width) # smaller nodes need bigger space for labels
+            annot = f"""
+               leaf{node.id}_annot [shape=none width="{spacer_width}" label=""]
+               leaf{node.id}_spacer [shape=none label=""]
+               leaf{node.id} -> leaf{node.id}_annot [penwidth=0 arrowsize=0 labeldistance="{labeldistance}" labelangle="0" taillabel=<{label}>]
+                {{
+                    rank=same;
+                    leaf{node.id} -> leaf{node.id}_spacer [style=invis]
+                }}
+            """
+            return gr + annot
 
     def class_leaf_node(node, label_fontsize: int = 12):
         counts = node.class_counts()
@@ -127,25 +153,15 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
             color_spec = color_values[i]
         width = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts(), output_range=(.15,.85))
         style = 'wedged' if n_classes <= max_class_colors and n_nonzero>1 else 'filled'
-        adjust = ""
-        labelangle = "0"
-        if style=='wedged':
-            adjust = "<br/>&nbsp;"
-            if orientation=='TD':
-                labeldistance="1.2"
-            else:
-                labelangle = "-20"
-                labeldistance = "1.4"
+        if orientation == 'TD':
+            labeldistance = ".6"
         else:
-            if orientation=='TD':
-                labeldistance=".6"
-            else:
-                labeldistance = "1.3"
-        label = f'<font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">n={node.nsamples()}{adjust}</font>'
+            labeldistance = "1.5"
+        label = f'<font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">n={node.nsamples()}</font>'
         gr = f'leaf{node.id} [fixedwidth="true" width="{width}" style={style} fillcolor="{color_spec}" shape=circle label=""]'
         annot = f"""
            leaf{node.id}_annot [shape=none label=""]
-           leaf{node.id} -> leaf{node.id}_annot [penwidth=0 arrowsize=0 labeldistance="{labeldistance}" labelangle="{labelangle}" taillabel=<{label}>]
+           leaf{node.id} -> leaf{node.id}_annot [penwidth=0 arrowsize=0 labeldistance="{labeldistance}" labelangle="0" taillabel=<{label}>]
         """
         return gr + annot
 
@@ -215,19 +231,20 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
 
     internal = []
     for node in shadow_tree.internal:
-        if shadow_tree.isclassifier():
-            class_split_viz(node, X_train, y_train,
-                            filename=f"{tmp}/node{node.id}.svg",
-                            precision=precision,
-                            colors=colors,
-                            histtype=histtype,
-                            node_heights=node_heights)
-        else:
-            regr_split_viz(node, X_train, y_train,
-                           filename=f"{tmp}/node{node.id}.svg",
-                           target_name=target_name,
-                           y_range=y_range,
-                           precision=precision)
+        if fancy:
+            if shadow_tree.isclassifier():
+                class_split_viz(node, X_train, y_train,
+                                filename=f"{tmp}/node{node.id}.svg",
+                                precision=precision,
+                                colors=colors,
+                                histtype=histtype,
+                                node_heights=node_heights)
+            else:
+                regr_split_viz(node, X_train, y_train,
+                               filename=f"{tmp}/node{node.id}.svg",
+                               target_name=target_name,
+                               y_range=y_range,
+                               precision=precision)
 
         nname = node_name(node)
         gr_node = split_node(node.feature_name(), nname, split=round(node.split()))
@@ -235,12 +252,13 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
 
     leaves = []
     for node in shadow_tree.leaves:
-        regr_leaf_viz(node, y_train, target_name=target_name, filename=f"{tmp}/node{node.id}.svg",
-                      y_range=y_range, precision=precision)
-
         if shadow_tree.isclassifier():
             leaves.append( class_leaf_node(node) )
         else:
+            if fancy:
+                regr_leaf_viz(node, y_train, target_name=target_name,
+                              filename=f"{tmp}/node{node.id}.svg",
+                              y_range=y_range, precision=precision)
             leaves.append( regr_leaf_node(node) )
 
     fromport = ""
