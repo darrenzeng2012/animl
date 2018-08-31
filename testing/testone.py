@@ -1,6 +1,7 @@
 import graphviz
 from animl.trees import *
 from gen_samples import *
+import tempfile
 
 def viz_iris(orientation="TD", max_depth=3, random_state=666, fancy=True):
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
@@ -38,6 +39,8 @@ st = viz_iris(fancy=True, orientation='TD')
 #st = viz_digits(fancy=True, orientation='TD')
 g = graphviz.Source(st)
 
+tmp = tempfile.gettempdir()
+print(f"Tmp dir is {tmp}")
 with open("/tmp/t3.dot", "w") as f:
     f.write(st+"\n")
 

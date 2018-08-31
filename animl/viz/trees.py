@@ -97,7 +97,7 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
         else:
             html = f"""<font face="Helvetica" color="#444443" point-size="12">{name}@{split}</font>"""
         if highlight:
-            gr_node = f'{node_name} [margin="0" shape=box penwidth=".3" color="{GREY}" style="dashed" label=<{html}>]'
+            gr_node = f'{node_name} [margin="0" shape=box penwidth=".5" color="{GREY}" style="dashed" label=<{html}>]'
         else:
             gr_node = f'{node_name} [margin="0" shape=none label=<{html}>]'
         return gr_node
@@ -146,31 +146,41 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
             return gr + annot
 
     def class_leaf_node(node, label_fontsize: int = 12):
-        counts = node.class_counts()
-        n_nonzero = np.count_nonzero(counts)
-        ratios = counts / node.nsamples()  # convert counts to ratios totalling 1.0
-        ratios = [round(int(r*1000)/1000.0, 3) for r in ratios] # make sure we don't go over 1.0
-        color_spec = [f"{color_values[i]};{r}" for i, r in enumerate(ratios)]
-        color_spec = ':'.join(color_spec)
-        max_class_colors = len(color_blind_friendly_colors) - 1
-        if n_classes > max_class_colors:
-            color_spec = LIGHTBLUE
-        if n_nonzero==1: # make pure
-            i = np.nonzero(counts)[0][0]
-            color_spec = color_values[i]
-        width = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts(), output_range=(.15,.85))
-        style = 'wedged' if n_classes <= max_class_colors and n_nonzero>1 else 'filled'
-        if orientation == 'TD':
-            labeldistance = ".6"
+        img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
+        if True:
+            html = f"""<table border="0" CELLBORDER="0" CELLPADDING="0" CELLSPACING="0">
+            <tr>
+                    <td CELLPADDING="0" CELLSPACING="0" port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}.svg"/></td>
+            </tr>
+            <tr>
+                    <td CELLPADDING="0" CELLSPACING="0"><font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">n={node.nsamples()}</font></td>
+            </tr>
+            </table>"""
+            return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
         else:
-            labeldistance = "1.5"
-        label = f'<font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">n={node.nsamples()}</font>'
-        gr = f'leaf{node.id} [fixedwidth="true" width="{width}" style={style} fillcolor="{color_spec}" shape=circle label=""]'
-        annot = f"""
-           leaf{node.id}_annot [shape=none label=""]
-           leaf{node.id} -> leaf{node.id}_annot [penwidth=0 arrowsize=0 labeldistance="{labeldistance}" labelangle="0" taillabel=<{label}>]
-        """
-        return gr + annot
+            ratios = counts / node.nsamples()  # convert counts to ratios totalling 1.0
+            ratios = [round(int(r*1000)/1000.0, 3) for r in ratios] # make sure we don't go over 1.0
+            color_spec = [f"{color_values[i]};{r}" for i, r in enumerate(ratios)]
+            color_spec = ':'.join(color_spec)
+            max_class_colors = len(color_blind_friendly_colors) - 1
+            if n_classes > max_class_colors:
+                color_spec = LIGHTBLUE
+            if n_nonzero==1: # make pure
+                i = np.nonzero(counts)[0][0]
+                color_spec = color_values[i]
+            width = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts(), output_range=(.15,.85))
+            style = 'wedged' if n_classes <= max_class_colors and n_nonzero>1 else 'filled'
+            if orientation == 'TD':
+                labeldistance = ".6"
+            else:
+                labeldistance = "1.5"
+            label = f'<font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">n={node.nsamples()}</font>'
+            gr = f'leaf{node.id} [fixedwidth="true" width="{width}" style={style} fillcolor="{color_spec}" shape=circle label=""]'
+            annot = f"""
+               leaf{node.id}_annot [shape=none label=""]
+               leaf{node.id} -> leaf{node.id}_annot [penwidth=0 arrowsize=0 labeldistance="{labeldistance}" labelangle="0" taillabel=<{label}>]
+            """
+            return gr + annot
 
     def class_legend_html(label_fontsize: int = 12):
         elements = []
@@ -260,6 +270,8 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
     leaves = []
     for node in shadow_tree.leaves:
         if shadow_tree.isclassifier():
+            class_leaf_viz(node, colors=color_values,
+                           filename=f"{tmp}/node{node.id}.svg")
             leaves.append( class_leaf_node(node) )
         else:
             if fancy:
@@ -353,7 +365,7 @@ def class_split_viz(node: ShadowDecTreeNode,
     X_feature = X[:,node.feature()]
     X_feature, y = X_feature[node.samples()], y[node.samples()]
 
-    n_classes = node.shadowtree.nclasses()
+    n_classes = node.shadow_tree.nclasses()
     nbins = get_num_bins(histtype, n_classes)
     overall_feature_range = (np.min(X[:,node.feature()]), np.max(X[:,node.feature()]))
 
@@ -364,11 +376,11 @@ def class_split_viz(node: ShadowDecTreeNode,
     ax.spines['left'].set_linewidth(.3)
     ax.spines['bottom'].set_linewidth(.3)
 
-    class_names = node.shadowtree.class_names
+    class_names = node.shadow_tree.class_names
 
     r = overall_feature_range[1]-overall_feature_range[0]
 
-    class_values = node.shadowtree.unique_target_values
+    class_values = node.shadow_tree.unique_target_values
     X_hist = [X_feature[y==cl] for cl in class_values]
     X_colors = [colors[cl] for cl in class_values]
     binwidth = r / nbins
@@ -420,6 +432,14 @@ def class_split_viz(node: ShadowDecTreeNode,
         plt.close()
 
 
+def class_leaf_viz(node : ShadowDecTreeNode,
+                   colors : List[str],
+                   filename: str):
+    size = prop_size(node.nsamples(), counts=node.shadow_tree.leaf_sample_counts(),
+                     output_range=(.8, 1.6))
+    draw_piechart(node.class_counts(), size=size, colors=colors, filename=filename)
+
+
 def regr_split_viz(node: ShadowDecTreeNode,
                    X: np.ndarray,
                    y: np.ndarray,
@@ -441,7 +461,7 @@ def regr_split_viz(node: ShadowDecTreeNode,
                 fontsize = label_fontsize, fontname = "Arial", color = GREY)
 
     ax.set_ylim(y_range)
-    if node==node.shadowtree.root:
+    if node==node.shadow_tree.root:
         ax.set_ylabel(target_name, fontsize=label_fontsize, fontname="Arial", color=GREY)
 
     ax.spines['top'].set_visible(False)
@@ -539,6 +559,32 @@ def draw_colored_box(color,filename):
 
     ax.set_xlim(0, 2)
     ax.set_ylim(0, 1)
+    ax.axis('off')
+    ax.xaxis.set_visible(False)
+    ax.yaxis.set_visible(False)
+
+    plt.tight_layout()
+    plt.savefig(filename, bbox_inches='tight', pad_inches=0)
+    plt.close()
+
+def draw_piechart(counts,size,colors,filename):
+    fig, ax = plt.subplots(1, 1, figsize=(size, size))
+    tweak = size * .01
+    ax.set_xlim(0 - tweak, size + tweak)
+    ax.set_ylim(0 - tweak, size + tweak)
+
+    n_nonzero = np.count_nonzero(counts)
+    if n_nonzero==1:
+        i = np.nonzero(counts)[0][0]
+        circle = patches.Circle((size/2,size/2), radius=size/2, fill=True, facecolor=colors[i], edgecolor="k", linewidth=.5)
+        circle.set_edgecolor(GREY)
+        ax.add_patch(circle)
+    else:
+        wedges, _ = ax.pie(counts, startangle=0, radius=size, colors=colors, shadow=False)
+        for w in wedges:
+            w.set_linewidth(.5)
+            w.set_edgecolor(GREY)
+
     ax.axis('off')
     ax.xaxis.set_visible(False)
     ax.yaxis.set_visible(False)
