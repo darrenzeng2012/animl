@@ -106,7 +106,7 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
     def regr_leaf_node(node, label_fontsize: int = 12):
         img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
         value = node.prediction()
-        if fancy:
+        if True:
             html = f"""<table border="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
             <tr>
                     <td colspan="3" port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}.svg"/></td>
@@ -274,10 +274,9 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
                            filename=f"{tmp}/node{node.id}.svg")
             leaves.append( class_leaf_node(node) )
         else:
-            if fancy:
-                regr_leaf_viz(node, y_train, target_name=target_name,
-                              filename=f"{tmp}/node{node.id}.svg",
-                              y_range=y_range, precision=precision)
+            regr_leaf_viz(node, y_train, target_name=target_name,
+                          filename=f"{tmp}/node{node.id}.svg",
+                          y_range=y_range, precision=precision)
             leaves.append( regr_leaf_node(node) )
 
     fromport = ""
@@ -436,7 +435,7 @@ def class_leaf_viz(node : ShadowDecTreeNode,
                    colors : List[str],
                    filename: str):
     size = prop_size(node.nsamples(), counts=node.shadow_tree.leaf_sample_counts(),
-                     output_range=(.8, 1.6))
+                     output_range=(.7, 1.6))
     draw_piechart(node.class_counts(), size=size, colors=colors, filename=filename)
 
 
@@ -568,28 +567,25 @@ def draw_colored_box(color,filename):
     plt.close()
 
 def draw_piechart(counts,size,colors,filename):
+    n_nonzero = np.count_nonzero(counts)
+    i = np.nonzero(counts)[0][0]
+    if n_nonzero==1:
+        counts = [counts[i]]
+        colors = [colors[i]]
     fig, ax = plt.subplots(1, 1, figsize=(size, size))
     tweak = size * .01
     ax.set_xlim(0 - tweak, size + tweak)
     ax.set_ylim(0 - tweak, size + tweak)
-
-    n_nonzero = np.count_nonzero(counts)
-    if n_nonzero==1:
-        i = np.nonzero(counts)[0][0]
-        circle = patches.Circle((size/2,size/2), radius=size/2, fill=True, facecolor=colors[i], edgecolor="k", linewidth=.5)
-        circle.set_edgecolor(GREY)
-        ax.add_patch(circle)
-    else:
-        wedges, _ = ax.pie(counts, startangle=0, radius=size, colors=colors, shadow=False)
-        for w in wedges:
-            w.set_linewidth(.5)
-            w.set_edgecolor(GREY)
+    wedges, _ = ax.pie(counts, radius=size, colors=colors, shadow=False)
+    for w in wedges:
+        w.set_linewidth(.5)
+        w.set_edgecolor(GREY)
 
     ax.axis('off')
     ax.xaxis.set_visible(False)
     ax.yaxis.set_visible(False)
 
-    plt.tight_layout()
+    # plt.tight_layout()
     plt.savefig(filename, bbox_inches='tight', pad_inches=0)
     plt.close()
 
