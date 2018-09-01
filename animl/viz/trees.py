@@ -20,6 +20,8 @@ LIGHTORANGE = '#fee090'
 LIGHTBLUE = '#a6bddb'
 GREY = '#444443'
 
+HIGHLIGHT_COLOR = '#D67C03'
+
 # How many bins should we have based upon number of classes
 NUM_BINS = [0, 0, 10, 9, 8, 6, 6, 6, 5, 5, 5]
           # 0, 1, 2,  3, 4, 5, 6, 7, 8, 9, 10
@@ -87,7 +89,6 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
 
     def split_node(name, node_name, split):
         img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
-        highlight = node.id in highlight_path
         if fancy:
             html = f"""<table border="0">
             <tr>
@@ -96,8 +97,8 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
             </table>"""
         else:
             html = f"""<font face="Helvetica" color="#444443" point-size="12">{name}@{split}</font>"""
-        if highlight:
-            gr_node = f'{node_name} [margin="0" shape=box penwidth=".5" color="{GREY}" style="dashed" label=<{html}>]'
+        if node.id in highlight_path:
+            gr_node = f'{node_name} [margin="0" shape=box penwidth=".5" color="{HIGHLIGHT_COLOR}" style="dashed" label=<{html}>]'
         else:
             gr_node = f'{node_name} [margin="0" shape=none label=<{html}>]'
         return gr_node
@@ -107,12 +108,15 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
         img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
         value = node.prediction()
         if fancy:
-            html = f"""<table border="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
+            html = f"""<table border="0">
             <tr>
-                    <td colspan="3" port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}.svg"/></td>
+                    <td port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}.svg"/></td>
             </tr>
             </table>"""
-            return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
+            if node.id in highlight_path:
+                return f'leaf{node.id} [margin="0" shape=box penwidth=".5" color="{HIGHLIGHT_COLOR}" style="dashed" label=<{html}>]'
+            else:
+                return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
         else:
             width = prop_size(node.nsamples(),
                               counts=shadow_tree.leaf_sample_counts(),
@@ -148,37 +152,15 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
 
     def class_leaf_node(node, label_fontsize: int = 12):
         img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
-        if True:
-            html = f"""<table border="0" CELLBORDER="0" CELLPADDING="0" CELLSPACING="0">
-            <tr>
-                    <td CELLPADDING="0" CELLSPACING="0" port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}.svg"/></td>
-            </tr>
-            </table>"""
-            return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
+        html = f"""<table border="0" CELLBORDER="0">
+        <tr>
+                <td port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}.svg"/></td>
+        </tr>
+        </table>"""
+        if node.id in highlight_path:
+            return f'leaf{node.id} [margin="0" shape=box penwidth=".5" color="{HIGHLIGHT_COLOR}" style="dashed" label=<{html}>]'
         else:
-            ratios = counts / node.nsamples()  # convert counts to ratios totalling 1.0
-            ratios = [round(int(r*1000)/1000.0, 3) for r in ratios] # make sure we don't go over 1.0
-            color_spec = [f"{color_values[i]};{r}" for i, r in enumerate(ratios)]
-            color_spec = ':'.join(color_spec)
-            max_class_colors = len(color_blind_friendly_colors) - 1
-            if n_classes > max_class_colors:
-                color_spec = LIGHTBLUE
-            if n_nonzero==1: # make pure
-                i = np.nonzero(counts)[0][0]
-                color_spec = color_values[i]
-            width = prop_size(node.nsamples(), counts = shadow_tree.leaf_sample_counts(), output_range=(.15,.85))
-            style = 'wedged' if n_classes <= max_class_colors and n_nonzero>1 else 'filled'
-            if orientation == 'TD':
-                labeldistance = ".6"
-            else:
-                labeldistance = "1.5"
-            label = f'<font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">n={node.nsamples()}</font>'
-            gr = f'leaf{node.id} [fixedwidth="true" width="{width}" style={style} fillcolor="{color_spec}" shape=circle label=""]'
-            annot = f"""
-               leaf{node.id}_annot [shape=none label=""]
-               leaf{node.id} -> leaf{node.id}_annot [penwidth=0 arrowsize=0 labeldistance="{labeldistance}" labelangle="0" taillabel=<{label}>]
-            """
-            return gr + annot
+            return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
 
     def class_legend_html(label_fontsize: int = 12):
         elements = []
