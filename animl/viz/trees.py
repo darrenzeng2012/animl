@@ -486,7 +486,7 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
     samples = node.samples()
     y = y[samples]
 
-    figsize = (1.6,.8)
+    figsize = (.8,1.2)
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     ax.tick_params(colors=GREY)
 
@@ -501,18 +501,20 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
     # ax.set_yticks(y_range)
 
     ticklabelpad = plt.rcParams['xtick.major.pad']
-    ax.annotate(f"{target_name}={round(m,precision)}",
+    ax.annotate(f"{target_name}={round(m,precision)}\nn={len(y)}",
                 xy=(.5, 0), xytext=(.5, -.5*ticklabelpad), ha='center', va='top',
                 xycoords='axes fraction', textcoords='offset points',
                 fontsize = label_fontsize, fontname = "Arial", color = GREY)
 
     ax.tick_params(axis='y', which='major', width=.3, labelcolor=GREY, labelsize=ticks_fontsize)
 
-    # Get X, y data for all samples associated with this node.
-    X = range(0,len(node.samples()))
+    mu = .5
+    sigma = .15
+    X = np.random.normal(mu, sigma, size=len(y))
+    ax.set_xlim(0, 1)
+    alpha = .25
 
-    ax.scatter(X, y, s=5, c='#225ea8', alpha=.4)
-    left, right = node.split_samples()
+    ax.scatter(X, y, s=5, c='#225ea8', alpha=alpha)
     ax.plot([0,len(node.samples())],[m,m],'--', color=GREY, linewidth=.5)
 
     plt.tight_layout()
