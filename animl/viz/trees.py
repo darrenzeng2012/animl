@@ -220,6 +220,8 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
         """
 
     def instance_gr():
+        if X is None:
+            return
         pred, path = shadow_tree.predict(X)
         leaf = f"leaf{path[-1].id}"
         return f"""

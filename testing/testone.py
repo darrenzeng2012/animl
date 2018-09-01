@@ -58,9 +58,9 @@ def viz_boston(orientation="TD", max_depth=3, random_state=666, fancy=True):
 
     return st
 
-#st = viz_boston(fancy=True, max_depth=3, orientation='TD')
+st = viz_boston(fancy=True, max_depth=3, orientation='TD')
 #st = viz_breast_cancer(fancy=False, orientation='TD')
-st = viz_iris(fancy=True, orientation='TD')
+#st = viz_iris(fancy=True, orientation='TD')
 #st = viz_digits(fancy=True, orientation='TD')
 g = graphviz.Source(st)
 
