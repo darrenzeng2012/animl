@@ -51,7 +51,8 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
              show_root_edge_labels : bool = True,
              fancy : bool = True,
              histtype: ('bar', 'barstacked') = 'barstacked',
-             highlight_path : List[int] = [])\
+             highlight_path : List[int] = [],
+             X : np.ndarray = None)\
         -> str:
     """
     Given a decision tree regressor or classifier, create and return a tree visualization
@@ -75,6 +76,8 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
                      four classes.
     :param highlight_path: A list of node IDs to highlight, default is []
     :type highlight_path: List[int]
+    :param X: Instance to run down the tree
+    :type np.ndarray
     :return: A string in graphviz DOT language that describes the decision tree.
     """
     def round(v,ndigits=precision):
@@ -193,6 +196,42 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
             }}
             """
 
+    def instance_html(label_fontsize: int = 11):
+        headers = []
+        #headers.append(f'<td bgcolor="white"><font face="Helvetica" color="{GREY}" point-size="{label_fontsize+2}"><b>X</b></font></td>')
+        for i,name in enumerate(feature_names):
+            sides = f'''border="1" sides="b"'''
+            sides=""
+            headers.append(f'<td cellpadding="1" align="right" {sides} bgcolor="white"><font face="Helvetica" color="{GREY}" point-size="{label_fontsize}"><b>{name}</b></font></td>')
+        values = []
+        # values.append('<td></td>')
+        for i,v in enumerate(X):
+            values.append(f'<td cellpadding="1" align="right" bgcolor="white"><font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">{v}</font></td>')
+
+        return f"""
+        <table border="0" cellspacing="0" cellpadding="0">
+        <tr>
+            {''.join(headers)}
+        </tr>
+        <tr>
+            {''.join(values)}
+        </tr>
+        </table>
+        """
+
+    def instance_gr():
+        pred, path = shadow_tree.predict(X)
+        leaf = f"leaf{path[-1].id}"
+        return f"""
+            subgraph cluster_instance {{
+                style=invis;
+                X_y [penwidth="0.3" margin="0" shape=box margin="0.03" width=.1, height=.1 label=<
+                {instance_html()}
+                >]
+            }}
+            {leaf} -> X_y [dir=back; penwidth="1.2" color="{HIGHLIGHT_COLOR}" label=<<font face="Helvetica" color="{GREY}" point-size="{11}"> prediction</font>>]
+            """
+
     ranksep = ".22"
     if orientation=="TD":
         ranksep = ".4"
@@ -293,8 +332,16 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
         if node==shadow_tree.root:
             llabel = root_llabel
             rlabel = root_rlabel
-        edges.append( f'{nname}{fromport} -> {left_node_name}{toport} [label=<{llabel}>]' )
-        edges.append( f'{nname}{fromport} -> {right_node_name}{toport} [label=<{rlabel}>]' )
+        lcolor = rcolor = GREY
+        lpw = rpw = "0.3"
+        if node.left.id in highlight_path:
+            lcolor = HIGHLIGHT_COLOR
+            lpw = "1.2"
+        if node.right.id in highlight_path:
+            rcolor = HIGHLIGHT_COLOR
+            rpw = "1.2"
+        edges.append( f'{nname}{fromport} -> {left_node_name}{toport} [penwidth={lpw} color="{lcolor}" label=<{llabel}>]' )
+        edges.append( f'{nname}{fromport} -> {right_node_name}{toport} [penwidth={rpw} color="{rcolor}" label=<{rlabel}>]' )
         edges.append(f"""
         {{
             rank=same;
@@ -317,6 +364,7 @@ digraph G {{
     {newline.join(leaves)}
     
     {class_legend_gr()}
+    {instance_gr()}
 }}
     """
 
