@@ -272,9 +272,10 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
                            filename=f"{tmp}/node{node.id}.svg")
             leaves.append( class_leaf_node(node) )
         else:
-            regr_leaf_viz(node, y_train, target_name=target_name,
-                          filename=f"{tmp}/node{node.id}.svg",
-                          y_range=y_range, precision=precision)
+            if fancy:
+                regr_leaf_viz(node, y_train, target_name=target_name,
+                              filename=f"{tmp}/node{node.id}.svg",
+                              y_range=y_range, precision=precision)
             leaves.append( regr_leaf_node(node) )
 
     fromport = ""
