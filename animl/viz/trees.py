@@ -106,7 +106,7 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
     def regr_leaf_node(node, label_fontsize: int = 12):
         img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
         value = node.prediction()
-        if True:
+        if fancy:
             html = f"""<table border="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
             <tr>
                     <td colspan="3" port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}.svg"/></td>
@@ -116,7 +116,8 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
         else:
             width = prop_size(node.nsamples(),
                               counts=shadow_tree.leaf_sample_counts(),
-                              output_range=(.15,.85))
+                              output_range=(1.01,2.7))
+            width = np.sqrt(np.log(width)) # see small n diffs visually
             gr = f'leaf{node.id} [fixedsize="true" width="{width}" style=filled fillcolor="{YELLOW}" shape=circle label=""]'
 
             if orientation == 'TD':
@@ -433,7 +434,6 @@ def class_leaf_viz(node : ShadowDecTreeNode,
                    filename: str):
     size = prop_size(node.nsamples(), counts=node.shadow_tree.leaf_sample_counts(),
                      output_range=(1.01, 2.7))
-    print(f"count {node.nsamples()} -> size {size} squared-log {np.sqrt(np.log(size))} sqrt {np.sqrt(size)}")
     # we visually need n=1 and n=9 to appear different but diff between 300 and 400 is no big deal
     size = np.sqrt(np.log(size))
     draw_piechart(node.class_counts(), size=size, colors=colors, filename=filename, label=f"n={node.nsamples()}")
