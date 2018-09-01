@@ -152,9 +152,6 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
             <tr>
                     <td CELLPADDING="0" CELLSPACING="0" port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}.svg"/></td>
             </tr>
-            <tr>
-                    <td CELLPADDING="0" CELLSPACING="0"><font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">n={node.nsamples()}</font></td>
-            </tr>
             </table>"""
             return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
         else:
@@ -435,8 +432,11 @@ def class_leaf_viz(node : ShadowDecTreeNode,
                    colors : List[str],
                    filename: str):
     size = prop_size(node.nsamples(), counts=node.shadow_tree.leaf_sample_counts(),
-                     output_range=(.7, 1.6))
-    draw_piechart(node.class_counts(), size=size, colors=colors, filename=filename)
+                     output_range=(1.01, 2.7))
+    print(f"count {node.nsamples()} -> size {size} squared-log {np.sqrt(np.log(size))} sqrt {np.sqrt(size)}")
+    # we visually need n=1 and n=9 to appear different but diff between 300 and 400 is no big deal
+    size = np.sqrt(np.log(size))
+    draw_piechart(node.class_counts(), size=size, colors=colors, filename=filename, label=f"n={node.nsamples()}")
 
 
 def regr_split_viz(node: ShadowDecTreeNode,
@@ -566,17 +566,22 @@ def draw_colored_box(color,filename):
     plt.savefig(filename, bbox_inches='tight', pad_inches=0)
     plt.close()
 
-def draw_piechart(counts,size,colors,filename):
+def draw_piechart(counts,size,colors,filename,label=None):
     n_nonzero = np.count_nonzero(counts)
     i = np.nonzero(counts)[0][0]
     if n_nonzero==1:
         counts = [counts[i]]
         colors = [colors[i]]
-    fig, ax = plt.subplots(1, 1, figsize=(size, size))
     tweak = size * .01
-    ax.set_xlim(0 - tweak, size + tweak)
-    ax.set_ylim(0 - tweak, size + tweak)
-    wedges, _ = ax.pie(counts, radius=size, colors=colors, shadow=False)
+    fig, ax = plt.subplots(1, 1, figsize=(size, size))
+    ax.axis('equal')
+    # ax.set_xlim(0 - tweak, size + tweak)
+    # ax.set_ylim(0 - tweak, size + tweak)
+    ax.set_xlim(0, size-10*tweak)
+    ax.set_ylim(0, size-10*tweak)
+    # frame=True needed for some reason to fit pie properly (ugh)
+    # had to tweak the crap out of this to get tight box around piechart :(
+    wedges, _ = ax.pie(counts, center=(size/2-6*tweak,size/2-6*tweak), radius=size/2, colors=colors, shadow=False, frame=True)
     for w in wedges:
         w.set_linewidth(.5)
         w.set_edgecolor(GREY)
@@ -584,6 +589,12 @@ def draw_piechart(counts,size,colors,filename):
     ax.axis('off')
     ax.xaxis.set_visible(False)
     ax.yaxis.set_visible(False)
+
+    if label is not None:
+        ax.text(size/2-6*tweak, -10*tweak, label,
+                horizontalalignment='center',
+                verticalalignment='top',
+                fontsize=9, color=GREY, fontname="Arial")
 
     # plt.tight_layout()
     plt.savefig(filename, bbox_inches='tight', pad_inches=0)
