@@ -46,15 +46,16 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
              feature_names : List[str],
              target_name : str,
              class_names : (Mapping[Number,str],List[str]) = None, # required if classifier
-             precision  : int = 1,
+             precision  : int = 2,
              orientation : ('TD','LR') ="TD",
              show_root_edge_labels : bool = True,
              fancy : bool = True,
              histtype: ('bar', 'barstacked') = 'barstacked',
              highlight_path : List[int] = [],
              X : np.ndarray = None,
-             max_X_features : int = 15)\
-        -> str:
+             max_X_features_LR : int = 10,
+             max_X_features_TD: int = 20) \
+             -> str:
     """
     Given a decision tree regressor or classifier, create and return a tree visualization
     using the graphviz (DOT) language.
@@ -68,7 +69,7 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
     :param class_names: [For classifiers] A dictionary or list of strings mapping class
                         value with class name.
     :param precision: When displaying floating-point numbers, how many digits to display
-                      after the decimal point.
+                      after the decimal point. Default is 2.
     :param orientation:  Is the tree top down, "TD", or left to right, "LR"?
     :param show_root_edge_labels: Include < and >= on the edges emanating from the root?
     :param fancy:
@@ -83,9 +84,14 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
               Show feature vector with labels underneath leaf reached. highlight_path
               is ignored if X is not None.
     :type np.ndarray
-    :param max_X_features: If len(X) exceeds this limit, display only those features
+    :param max_X_features_LR: If len(X) exceeds this limit for LR layout,
+                            display only those features
                            used to guide X vector down tree. Helps when len(X) is large.
-                           Default is 15.
+                           Default is 10.
+    :param max_X_features_TD: If len(X) exceeds this limit for TD layout,
+                            display only those features
+                           used to guide X vector down tree. Helps when len(X) is large.
+                           Default is 25.
 
     :return: A string in graphviz DOT language that describes the decision tree.
     """
@@ -211,8 +217,9 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
         display_X = X
         display_feature_names = feature_names
         highlight_feature_indexes = features_used
-        if len(X)>max_X_features:
-            # squash all features down to just those used
+        if (orientation=='TD' and len(X)>max_X_features_TD) or\
+          (orientation == 'LR' and len(X) > max_X_features_LR):
+        # squash all features down to just those used
             display_X = [X[i] for i in features_used] + ['...']
             display_feature_names = [node.feature_name() for node in path[:-1]] + ['...']
             highlight_feature_indexes = range(0,len(features_used))
@@ -228,7 +235,11 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
             color = GREY
             if i in highlight_feature_indexes:
                 color = HIGHLIGHT_COLOR
-            values.append(f'<td cellpadding="1" align="right" bgcolor="white"><font face="Helvetica" color="{color}" point-size="{label_fontsize}">{v}</font></td>')
+            if isinstance(v,int) or isinstance(v, str):
+                disp_v = v
+            else:
+                disp_v = round(v, precision)
+            values.append(f'<td cellpadding="1" align="right" bgcolor="white"><font face="Helvetica" color="{color}" point-size="{label_fontsize}">{disp_v}</font></td>')
 
         return f"""
         <table border="0" cellspacing="0" cellpadding="0">
