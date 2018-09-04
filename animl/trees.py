@@ -45,6 +45,10 @@ class ShadowDecTree:
         self.tree_model = tree_model
         self.feature_names = feature_names
         self.class_names = class_names
+
+        if getattr(tree_model, 'tree_') is None: # make sure model is fit
+            tree_model.fit(X_train, y_train)
+
         if tree_model.tree_.n_classes > 1:
             if isinstance(self.class_names, dict):
                 self.class_names = self.class_names
@@ -254,10 +258,12 @@ class ShadowDecTreeNode:
         """
         If the tree model is a classifier and we know the class names,
         return the class name associated with the prediction for this leaf node.
+        Return prediction class or value otherwise.
         """
         if self.isclassifier():
-            return self.shadow_tree.class_names[ self.prediction()]
-        return None
+            if self.shadow_tree.class_names is not None:
+                return self.shadow_tree.class_names[self.prediction()]
+        return self.prediction()
 
     def class_counts(self) -> (List[int],None):
         """

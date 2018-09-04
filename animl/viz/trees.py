@@ -52,7 +52,8 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
              fancy : bool = True,
              histtype: ('bar', 'barstacked') = 'barstacked',
              highlight_path : List[int] = [],
-             X : np.ndarray = None)\
+             X : np.ndarray = None,
+             max_X_features : int = 15)\
         -> str:
     """
     Given a decision tree regressor or classifier, create and return a tree visualization
@@ -74,10 +75,18 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
     :param histtype: [For classifiers] Either 'bar' or 'barstacked' to indicate
                      histogram type. We find that 'barstacked' looks great up to about.
                      four classes.
-    :param highlight_path: A list of node IDs to highlight, default is []
+    :param highlight_path: A list of node IDs to highlight, default is [].
+                           Useful for emphasizing node(s) in tree for discussion.
+                           If X argument given then this is ignored.
     :type highlight_path: List[int]
-    :param X: Instance to run down the tree
+    :param X: Instance to run down the tree; derived path to highlight from this vector.
+              Show feature vector with labels underneath leaf reached. highlight_path
+              is ignored if X is not None.
     :type np.ndarray
+    :param max_X_features: If len(X) exceeds this limit, display only those features
+                           used to guide X vector down tree. Helps when len(X) is large.
+                           Default is 15.
+
     :return: A string in graphviz DOT language that describes the decision tree.
     """
     def round(v,ndigits=precision):
@@ -198,21 +207,26 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
 
     def instance_html(path, label_fontsize: int = 11):
         headers = []
-        features_used = [node.feature() for node in path]
+        features_used = [node.feature() for node in path[:-1]] # don't include leaf
+        display_X = X
+        display_feature_names = feature_names
+        highlight_feature_indexes = features_used
+        if len(X)>max_X_features:
+            # squash all features down to just those used
+            display_X = [X[i] for i in features_used] + ['...']
+            display_feature_names = [node.feature_name() for node in path[:-1]] + ['...']
+            highlight_feature_indexes = range(0,len(features_used))
 
-        #headers.append(f'<td bgcolor="white"><font face="Helvetica" color="{GREY}" point-size="{label_fontsize+2}"><b>X</b></font></td>')
-        for i,name in enumerate(feature_names):
-            sides = f'''border="1" sides="b"'''
-            sides=""
+        for i,name in enumerate(display_feature_names):
             color = GREY
-            if i in features_used:
+            if i in highlight_feature_indexes:
                 color = HIGHLIGHT_COLOR
-            headers.append(f'<td cellpadding="1" align="right" {sides} bgcolor="white"><font face="Helvetica" color="{color}" point-size="{label_fontsize}"><b>{name}</b></font></td>')
+            headers.append(f'<td cellpadding="1" align="right" bgcolor="white"><font face="Helvetica" color="{color}" point-size="{label_fontsize}"><b>{name}</b></font></td>')
+
         values = []
-        # values.append('<td></td>')
-        for i,v in enumerate(X):
+        for i,v in enumerate(display_X):
             color = GREY
-            if i in features_used:
+            if i in highlight_feature_indexes:
                 color = HIGHLIGHT_COLOR
             values.append(f'<td cellpadding="1" align="right" bgcolor="white"><font face="Helvetica" color="{color}" point-size="{label_fontsize}">{v}</font></td>')
 
@@ -229,9 +243,13 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
 
     def instance_gr():
         if X is None:
-            return
+            return ""
         pred, path = shadow_tree.predict(X)
         leaf = f"leaf{path[-1].id}"
+        if shadow_tree.isclassifier():
+            edge_label = f" Prediction<br/> {path[-1].prediction_name()}"
+        else:
+            edge_label = f" Prediction<br/> {round(path[-1].prediction(), precision)}"
         return f"""
             subgraph cluster_instance {{
                 style=invis;
@@ -239,7 +257,7 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
                 {instance_html(path)}
                 >]
             }}
-            {leaf} -> X_y [dir=back; penwidth="1.2" color="{HIGHLIGHT_COLOR}" label=<<font face="Helvetica" color="{GREY}" point-size="{11}"> prediction</font>>]
+            {leaf} -> X_y [dir=back; penwidth="1.2" color="{HIGHLIGHT_COLOR}" label=<<font face="Helvetica" color="{GREY}" point-size="{11}">{edge_label}</font>>]
             """
 
     ranksep = ".22"
@@ -250,6 +268,10 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
 
     shadow_tree = ShadowDecTree(tree_model, X_train, y_train,
                                 feature_names=feature_names, class_names=class_names)
+
+    if X is not None:
+        pred, path  = shadow_tree.predict(X)
+        highlight_path = [n.id for n in path]
 
     n_classes = shadow_tree.nclasses()
     color_values = color_blind_friendly_colors[n_classes]

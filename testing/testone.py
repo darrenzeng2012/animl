@@ -30,7 +30,6 @@ def viz_iris(orientation="TD", max_depth=5, random_state=666, fancy=True):
                   feature_names=data.columns, orientation=orientation,
                   class_names=["setosa", "versicolor", "virginica"],  # 0,1,2 targets
                   fancy=fancy,
-                  highlight_path=path,
                   X=x)
 
     return st
@@ -53,14 +52,13 @@ def viz_boston(orientation="TD", max_depth=3, random_state=666, fancy=True):
     st = dtreeviz(regr, boston.data, boston.target, target_name='price',
                   feature_names=boston.feature_names, orientation=orientation,
                   fancy=fancy,
-                  highlight_path=path,
                   X=x)
 
     return st
 
 #st = viz_boston(fancy=True, max_depth=3, orientation='TD')
-st = viz_breast_cancer(fancy=True, orientation='TD')
-#st = viz_iris(fancy=True, orientation='TD')
+#st = viz_breast_cancer(fancy=True, orientation='TD')
+st = viz_iris(fancy=True, orientation='TD')
 #st = viz_digits(fancy=True, orientation='TD')
 g = graphviz.Source(st)
 
