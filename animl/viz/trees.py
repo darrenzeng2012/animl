@@ -196,17 +196,25 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
             }}
             """
 
-    def instance_html(label_fontsize: int = 11):
+    def instance_html(path, label_fontsize: int = 11):
         headers = []
+        features_used = [node.feature() for node in path]
+
         #headers.append(f'<td bgcolor="white"><font face="Helvetica" color="{GREY}" point-size="{label_fontsize+2}"><b>X</b></font></td>')
         for i,name in enumerate(feature_names):
             sides = f'''border="1" sides="b"'''
             sides=""
-            headers.append(f'<td cellpadding="1" align="right" {sides} bgcolor="white"><font face="Helvetica" color="{GREY}" point-size="{label_fontsize}"><b>{name}</b></font></td>')
+            color = GREY
+            if i in features_used:
+                color = HIGHLIGHT_COLOR
+            headers.append(f'<td cellpadding="1" align="right" {sides} bgcolor="white"><font face="Helvetica" color="{color}" point-size="{label_fontsize}"><b>{name}</b></font></td>')
         values = []
         # values.append('<td></td>')
         for i,v in enumerate(X):
-            values.append(f'<td cellpadding="1" align="right" bgcolor="white"><font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">{v}</font></td>')
+            color = GREY
+            if i in features_used:
+                color = HIGHLIGHT_COLOR
+            values.append(f'<td cellpadding="1" align="right" bgcolor="white"><font face="Helvetica" color="{color}" point-size="{label_fontsize}">{v}</font></td>')
 
         return f"""
         <table border="0" cellspacing="0" cellpadding="0">
@@ -228,7 +236,7 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
             subgraph cluster_instance {{
                 style=invis;
                 X_y [penwidth="0.3" margin="0" shape=box margin="0.03" width=.1, height=.1 label=<
-                {instance_html()}
+                {instance_html(path)}
                 >]
             }}
             {leaf} -> X_y [dir=back; penwidth="1.2" color="{HIGHLIGHT_COLOR}" label=<<font face="Helvetica" color="{GREY}" point-size="{11}"> prediction</font>>]
@@ -312,6 +320,8 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
 
     if shadow_tree.isclassifier():
         fromport = toport = ""
+    # in the end, it looks better without the downward edges emanating from same point
+    fromport = toport = ""
 
     show_edge_labels = False
     all_llabel = '&lt;' if show_edge_labels else ''
