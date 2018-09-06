@@ -326,7 +326,9 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
                                filename=f"{tmp}/node{node.id}.svg",
                                target_name=target_name,
                                y_range=y_range,
-                               precision=precision)
+                               precision=precision,
+                               X=X,
+                               highlight_node=node.id in highlight_path)
 
         nname = node_name(node)
         gr_node = split_node(node.feature_name(), nname, split=round(node.split()))
@@ -438,7 +440,6 @@ def class_split_viz(node: ShadowDecTreeNode,
     fig, ax = plt.subplots(1, 1, figsize=figsize)
 
     feature_name = node.feature_name()
-    ax.set_xlabel(f"{feature_name}@{round(node.split(),precision)}", fontsize=label_fontsize, fontname="Arial", color=GREY)
 
     # Get X, y data for all samples associated with this node.
     X_feature = X_train[:, node.feature()]
@@ -490,28 +491,11 @@ def class_split_viz(node: ShadowDecTreeNode,
         t = patches.Polygon(tria, facecolor=color)
         t.set_clip_on(False)
         ax.add_patch(t)
-        if (node.split()-overall_feature_range[0]) >= .5*r:
-            ax.text(node.split(), -2*th,
-                    f"{round(node.split(),precision)}",
-                    horizontalalignment='center',
-                    fontsize=ticks_fontsize, color=GREY)
-        else:
-            ax.text(node.split(), -2*th,
-                    f"{round(node.split(),precision)}",
-                    horizontalalignment='center',
-                    fontsize=ticks_fontsize, color=GREY)
+        ax.text(node.split(), -2 * th,
+                f"{round(node.split(),precision)}",
+                horizontalalignment='center',
+                fontsize=ticks_fontsize, color=GREY)
 
-    # xmin, xmax = ax.get_xlim()
-    # ymin, ymax = ax.get_ylim()
-    # xr = xmax-xmin
-    # yr = ymax-ymin
-    # hr = h / (height_range[1]-height_range[0])
-    # th = yr*.15 * 1/hr # convert to graph coordinates (ugh)
-    # tw = xr*.018
-    # tipy = -0.1 * yr *.15 * 1/hr
-    # tria = np.array([[node.split(), tipy], [node.split() - tw, -th], [node.split() + tw, -th]])
-    # t = patches.Polygon(tria, facecolor=WEDGE_COLOR)
-    # ax.add_patch(t)
     wedge(ax, node.split(), color=WEDGE_COLOR)
     if highlight_node:
         wedge(ax, X[node.feature()], color=HIGHLIGHT_COLOR)
@@ -539,24 +523,28 @@ def class_leaf_viz(node : ShadowDecTreeNode,
 
 
 def regr_split_viz(node: ShadowDecTreeNode,
-                   X: np.ndarray,
-                   y: np.ndarray,
+                   X_train: np.ndarray,
+                   y_train: np.ndarray,
                    target_name: str,
                    filename: str = None,
                    y_range=None,
                    ticks_fontsize: int = 8,
                    label_fontsize: int = 9,
-                   precision=1):
+                   precision=1,
+                   X : np.array = None,
+                   highlight_node : bool = False):
     figsize = (2.5, 1.1)
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     ax.tick_params(colors=GREY)
 
     feature_name = node.feature_name()
-    ticklabelpad = plt.rcParams['xtick.major.pad']
-    ax.annotate(f"{feature_name}@{round(node.split(),precision)}",
-                xy=(.5, 0), xytext=(.5, -2*ticklabelpad), ha='center', va='top',
-                xycoords='axes fraction', textcoords='offset points',
-                fontsize = label_fontsize, fontname = "Arial", color = GREY)
+    # ticklabelpad = plt.rcParams['xtick.major.pad']
+    # ax.annotate(f"{feature_name}",
+    #             xy=(.5, 0), xytext=(.5, -3*ticklabelpad), ha='center', va='top',
+    #             xycoords='axes fraction', textcoords='offset points',
+    #             fontsize = label_fontsize, fontname = "Arial", color = GREY)
+
+    ax.set_xlabel(f"{feature_name}", fontsize=label_fontsize, fontname="Arial", color=GREY)
 
     ax.set_ylim(y_range)
     if node==node.shadow_tree.root:
@@ -569,22 +557,51 @@ def regr_split_viz(node: ShadowDecTreeNode,
     ax.tick_params(axis='both', which='major', width=.3, labelcolor=GREY, labelsize=ticks_fontsize)
 
     # Get X, y data for all samples associated with this node.
-    X_feature = X[:,node.feature()]
-    X_feature, y = X_feature[node.samples()], y[node.samples()]
+    X_feature = X_train[:,node.feature()]
+    X_feature, y_train = X_feature[node.samples()], y_train[node.samples()]
 
-    overall_feature_range = (np.min(X[:,node.feature()]), np.max(X[:,node.feature()]))
+    overall_feature_range = (np.min(X_train[:,node.feature()]), np.max(X_train[:,node.feature()]))
     ax.set_xlim(*overall_feature_range)
-    ax.set_xticks(overall_feature_range)
 
+    xmin, xmax = overall_feature_range
+    xr = xmax - xmin
 
-    ax.scatter(X_feature, y, s=5, c='#225ea8', alpha=.4)
+    xticks = list(overall_feature_range)
+    if node.split()>xmin+.10*xr and node.split()<xmax-.1*xr: # don't show split if too close to axis ends
+        xticks += [node.split()]
+    ax.set_xticks(xticks)
+
+    ax.scatter(X_feature, y_train, s=5, c='#225ea8', alpha=.4)
     left, right = node.split_samples()
-    left = y[left]
-    right = y[right]
+    left = y_train[left]
+    right = y_train[right]
     split = node.split()
-    ax.plot([overall_feature_range[0],split],[np.mean(left),np.mean(left)],'--', color=GREY, linewidth=.5)
-    ax.plot([split,split],[min(y),max(y)],'--', color=GREY, linewidth=.5)
-    ax.plot([split,overall_feature_range[1]],[np.mean(right),np.mean(right)],'--', color=GREY, linewidth=.5)
+    ax.plot([overall_feature_range[0],split],[np.mean(left),np.mean(left)],'--', color='k', linewidth=1)
+    ax.plot([split,split],[*y_range],'--', color='k', linewidth=1)
+    ax.plot([split,overall_feature_range[1]],[np.mean(right),np.mean(right)],'--', color='k', linewidth=1)
+
+    def wedge(ax,x,color):
+        ymin, ymax = ax.get_ylim()
+        xr = xmax - xmin
+        yr = ymax - ymin
+        hr = figsize[1]
+        th = yr * .1
+        tw = xr * .018
+        tipy = ymin
+        tria = np.array([[x, tipy], [x - tw, ymin-th], [x + tw, ymin-th]])
+        t = patches.Polygon(tria, facecolor=color)
+        t.set_clip_on(False)
+        ax.add_patch(t)
+
+        # ax.text(node.split(), 0,
+        #         f"{round(node.split(),precision)}",
+        #         horizontalalignment='center',
+        #         fontsize=ticks_fontsize, color=GREY)
+
+    wedge(ax, node.split(), color=WEDGE_COLOR)
+
+    if highlight_node:
+        wedge(ax, X[node.feature()], color=HIGHLIGHT_COLOR)
 
     if filename is not None:
         plt.savefig(filename, bbox_inches='tight', pad_inches=0)
@@ -631,7 +648,7 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
     alpha = .25
 
     ax.scatter(X, y, s=5, c='#225ea8', alpha=alpha)
-    ax.plot([0,len(node.samples())],[m,m],'--', color=GREY, linewidth=.5)
+    ax.plot([0,len(node.samples())],[m,m],'--', color=GREY, linewidth=1)
 
     plt.tight_layout()
     if filename is not None:

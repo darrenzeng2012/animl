@@ -70,11 +70,11 @@ def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True, p
     return st
 
 
-#st = viz_boston(fancy=True, max_depth=3, orientation='LR')
+st = viz_boston(fancy=True, max_depth=3, orientation='LR')
 #st = viz_breast_cancer(fancy=True, orientation='TD')
 #st = viz_iris(fancy=True, orientation='TD')
 #st = viz_digits(fancy=True, orientation='TD')
-st = viz_knowledge(fancy=True, orientation='TD', max_depth=3)
+#st = viz_knowledge(fancy=True, orientation='TD', max_depth=3)
 g = graphviz.Source(st)
 
 tmp = tempfile.gettempdir()
