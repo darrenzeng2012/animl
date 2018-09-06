@@ -19,6 +19,7 @@ DARKGREEN = '#006400'
 LIGHTORANGE = '#fee090'
 LIGHTBLUE = '#a6bddb'
 GREY = '#444443'
+WEDGE_COLOR = GREY #'orange'
 
 HIGHLIGHT_COLOR = '#D67C03'
 
@@ -317,7 +318,9 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
                                 precision=precision,
                                 colors=colors,
                                 histtype=histtype,
-                                node_heights=node_heights)
+                                node_heights=node_heights,
+                                X = X,
+                                highlight_node=node.id in highlight_path)
             else:
                 regr_split_viz(node, X_train, y_train,
                                filename=f"{tmp}/node{node.id}.svg",
@@ -417,15 +420,18 @@ digraph G {{
 
 
 def class_split_viz(node: ShadowDecTreeNode,
-                    X: np.ndarray,
-                    y: np.ndarray,
+                    X_train: np.ndarray,
+                    y_train: np.ndarray,
                     colors: Mapping[int, str],
                     node_heights,
                     filename: str = None,
                     ticks_fontsize: int = 8,
                     label_fontsize: int = 9,
                     precision=1,
-                    histtype: ('bar', 'barstacked') = 'barstacked'):
+                    histtype: ('bar', 'barstacked') = 'barstacked',
+                    X : np.array = None,
+                    highlight_node : bool = False
+                    ):
     height_range = (.5, 1.5)
     h = prop_size(n=node_heights[node.id], counts=node_heights.values(), output_range=height_range)
     figsize=(3.3, h)
@@ -435,12 +441,12 @@ def class_split_viz(node: ShadowDecTreeNode,
     ax.set_xlabel(f"{feature_name}@{round(node.split(),precision)}", fontsize=label_fontsize, fontname="Arial", color=GREY)
 
     # Get X, y data for all samples associated with this node.
-    X_feature = X[:,node.feature()]
-    X_feature, y = X_feature[node.samples()], y[node.samples()]
+    X_feature = X_train[:, node.feature()]
+    X_feature, y_train = X_feature[node.samples()], y_train[node.samples()]
 
     n_classes = node.shadow_tree.nclasses()
     nbins = get_num_bins(histtype, n_classes)
-    overall_feature_range = (np.min(X[:,node.feature()]), np.max(X[:,node.feature()]))
+    overall_feature_range = (np.min(X_train[:, node.feature()]), np.max(X_train[:, node.feature()]))
 
     ax.set_xlabel(f"{feature_name}", fontsize=label_fontsize, fontname="Arial",
                   color=GREY)
@@ -454,7 +460,7 @@ def class_split_viz(node: ShadowDecTreeNode,
     r = overall_feature_range[1]-overall_feature_range[0]
 
     class_values = node.shadow_tree.unique_target_values
-    X_hist = [X_feature[y==cl] for cl in class_values]
+    X_hist = [X_feature[y_train == cl] for cl in class_values]
     X_colors = [colors[cl] for cl in class_values]
     binwidth = r / nbins
 
@@ -470,28 +476,45 @@ def class_split_viz(node: ShadowDecTreeNode,
     ax.set_yticks([0,max([max(h) for h in hist])])
     ax.tick_params(axis='both', which='major', width=.3, labelcolor=GREY, labelsize=ticks_fontsize)
 
-    xmin, xmax = ax.get_xlim()
-    ymin, ymax = ax.get_ylim()
-    xr = xmax-xmin
-    yr = ymax-ymin
-    hr = h / (height_range[1]-height_range[0])
-    th = yr*.15 * 1/hr # convert to graph coordinates (ugh)
-    tw = xr*.018
-    tipy = -0.1 * yr *.15 * 1/hr
-    tria = np.array([[node.split(), tipy], [node.split() - tw, -th], [node.split() + tw, -th]])
-    t = patches.Polygon(tria, facecolor='orange')
-    t.set_clip_on(False)
-    ax.add_patch(t)
-    if (node.split()-overall_feature_range[0]) >= .5*r:
-        ax.text(node.split() - tw, -1.2*th,
-                f"{round(node.split(),1)}",
-                horizontalalignment='right',
-                fontsize=ticks_fontsize, color=GREY)
-    else:
-        ax.text(node.split() + tw, -1.2*th,
-                f"{round(node.split(),1)}",
-                horizontalalignment='left',
-                fontsize=ticks_fontsize, color=GREY)
+    def wedge(ax,x,color):
+        xmin, xmax = ax.get_xlim()
+        ymin, ymax = ax.get_ylim()
+        xr = xmax - xmin
+        yr = ymax - ymin
+        hr = h / (height_range[1] - height_range[0])
+        th = yr * .15 * 1 / hr  # convert to graph coordinates (ugh)
+        tw = xr * .018
+        tipy = -0.1 * yr * .15 * 1 / hr
+        tria = np.array(
+            [[x, tipy], [x - tw, -th], [x + tw, -th]])
+        t = patches.Polygon(tria, facecolor=color)
+        t.set_clip_on(False)
+        ax.add_patch(t)
+        if (node.split()-overall_feature_range[0]) >= .5*r:
+            ax.text(node.split() - tw, -1.2*th,
+                    f"{round(node.split(),precision)}",
+                    horizontalalignment='right',
+                    fontsize=ticks_fontsize, color=GREY)
+        else:
+            ax.text(node.split() + tw, -1.2*th,
+                    f"{round(node.split(),precision)}",
+                    horizontalalignment='left',
+                    fontsize=ticks_fontsize, color=GREY)
+
+    # xmin, xmax = ax.get_xlim()
+    # ymin, ymax = ax.get_ylim()
+    # xr = xmax-xmin
+    # yr = ymax-ymin
+    # hr = h / (height_range[1]-height_range[0])
+    # th = yr*.15 * 1/hr # convert to graph coordinates (ugh)
+    # tw = xr*.018
+    # tipy = -0.1 * yr *.15 * 1/hr
+    # tria = np.array([[node.split(), tipy], [node.split() - tw, -th], [node.split() + tw, -th]])
+    # t = patches.Polygon(tria, facecolor=WEDGE_COLOR)
+    # ax.add_patch(t)
+    wedge(ax, node.split(), color=WEDGE_COLOR)
+    if highlight_node:
+        wedge(ax, X[node.feature()], color=HIGHLIGHT_COLOR)
 
 
     # Alter appearance of each bar
