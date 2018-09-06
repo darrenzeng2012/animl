@@ -491,14 +491,14 @@ def class_split_viz(node: ShadowDecTreeNode,
         t.set_clip_on(False)
         ax.add_patch(t)
         if (node.split()-overall_feature_range[0]) >= .5*r:
-            ax.text(node.split() - tw, -1.2*th,
+            ax.text(node.split(), -2*th,
                     f"{round(node.split(),precision)}",
-                    horizontalalignment='right',
+                    horizontalalignment='center',
                     fontsize=ticks_fontsize, color=GREY)
         else:
-            ax.text(node.split() + tw, -1.2*th,
+            ax.text(node.split(), -2*th,
                     f"{round(node.split(),precision)}",
-                    horizontalalignment='left',
+                    horizontalalignment='center',
                     fontsize=ticks_fontsize, color=GREY)
 
     # xmin, xmax = ax.get_xlim()
