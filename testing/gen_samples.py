@@ -209,7 +209,7 @@ def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True, p
         X = know.iloc[np.random.randint(0, len(know))]
 
     st = dtreeviz(clf, X_train, y_train, target_name='UNS',
-                  feature_names=know.columns.values, orientation=orientation,
+                  feature_names=X_train.columns.values, orientation=orientation,
                   class_names=target_names,
                   fancy=fancy,
                   X=X)
