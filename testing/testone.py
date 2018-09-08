@@ -2,6 +2,8 @@ import graphviz
 from animl.trees import *
 from gen_samples import *
 import tempfile
+from sklearn.tree import export_graphviz
+
 
 def viz_iris(orientation="TD", max_depth=5, random_state=666, fancy=True):
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
@@ -48,7 +50,11 @@ def viz_boston(orientation="TD", max_depth=3, random_state=666, fancy=True):
     st = dtreeviz(regr, boston.data, boston.target, target_name='price',
                   feature_names=boston.feature_names, orientation=orientation,
                   fancy=fancy,
-                  X=x)
+                  X=None)
+
+    export_graphviz(regr, out_file="/tmp/boston-scikit-tree.dot",
+                    filled=True, rounded=True,
+                    special_characters=True)
 
     return st
 
@@ -70,7 +76,7 @@ def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True, p
     return st
 
 
-st = viz_boston(fancy=True, max_depth=3, orientation='LR')
+st = viz_boston(fancy=True, max_depth=3, orientation='TD')
 #st = viz_breast_cancer(fancy=True, orientation='TD')
 #st = viz_iris(fancy=True, orientation='TD')
 #st = viz_digits(fancy=True, orientation='TD')

@@ -274,7 +274,7 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
 
     ranksep = ".22"
     if orientation=="TD":
-        ranksep = ".4"
+        ranksep = ".2"
 
     tmp = tempfile.gettempdir()
 
