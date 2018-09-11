@@ -139,12 +139,12 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
         else:
             width = prop_size(node.nsamples(),
                               counts=shadow_tree.leaf_sample_counts(),
-                              output_range=(1.01,2.7))
+                              output_range=(1.01,1.5))
             width = np.sqrt(np.log(width)) # see small n diffs visually
             gr = f'leaf{node.id} [fixedsize="true" width="{width}" style=filled fillcolor="{YELLOW}" shape=circle label=""]'
 
             if orientation == 'TD':
-                labeldistance = "1.2"
+                labeldistance = "1.5"
             else:
                 labeldistance = "2.2"
             # label = f'<font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">n={node.nsamples()}</font>'
