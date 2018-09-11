@@ -406,6 +406,7 @@ digraph G {{
     nodesep=0.1;
     ranksep={ranksep};
     rankdir={orientation};
+    margin=0.0;
     node [margin="0.03" penwidth="0.5" width=.1, height=.1];
     edge [arrowsize=.4 penwidth="0.3"]
     
@@ -603,6 +604,7 @@ def regr_split_viz(node: ShadowDecTreeNode,
     if highlight_node:
         wedge(ax, X[node.feature()], color=HIGHLIGHT_COLOR)
 
+    plt.tight_layout()
     if filename is not None:
         plt.savefig(filename, bbox_inches='tight', pad_inches=0)
         plt.close()
