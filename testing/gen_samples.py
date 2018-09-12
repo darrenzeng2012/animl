@@ -33,17 +33,14 @@ def viz_boston(orientation="TD", max_depth=3, random_state=666, fancy=True, pick
     regr = tree.DecisionTreeRegressor(max_depth=max_depth, random_state=random_state)
     boston = load_boston()
 
-    data = pd.DataFrame(boston.data)
-    data.columns = boston.feature_names
-
-    regr = regr.fit(data, boston.target)
+    regr = regr.fit(boston.data, boston.target)
 
     X = None
     if pickX:
         X = boston.data[np.random.randint(0, len(boston.data)),:]
 
-    st = dtreeviz(regr, data, boston.target, target_name='price',
-                  feature_names=data.columns, orientation=orientation,
+    st = dtreeviz(regr, boston.data, boston.target, target_name='price',
+                  feature_names=boston.feature_names, orientation=orientation,
                   fancy=fancy,
                   X=X)
 
@@ -100,7 +97,7 @@ def viz_fires(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX
 
     X = None
     if pickX:
-        X = fires.iloc[np.random.randint(0, len(X_train))].values
+        X = X_train.iloc[np.random.randint(0, len(X_train))].values
 
     st = dtreeviz(regr, X_train, y_train, target_name='area',
                   feature_names=fires.columns, orientation=orientation,
@@ -116,17 +113,14 @@ def viz_iris(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     iris = load_iris()
 
-    data = pd.DataFrame(iris.data)
-    data.columns = iris.feature_names
-
-    clf = clf.fit(data, iris.target)
+    clf = clf.fit(iris.data, iris.target)
 
     X = None
     if pickX:
         X = iris.data[np.random.randint(0, len(iris.data)),:]
 
-    st = dtreeviz(clf, data, iris.target,target_name='variety',
-                  feature_names=data.columns, orientation=orientation,
+    st = dtreeviz(clf, iris.data, iris.target,target_name='variety',
+                  feature_names=iris.feature_names, orientation=orientation,
                   class_names=["setosa", "versicolor", "virginica"], # 0,1,2 targets
                   fancy=fancy,
                   X=X)
@@ -137,18 +131,17 @@ def viz_digits(orientation="TD", max_depth=3, random_state=666, fancy=True, pick
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     digits = load_digits()
 
-    data = pd.DataFrame(digits.data)
-    "8x8 image of integer pixels in the range 0..16."
-    data.columns = [f'pixel[{i},{j}]' for i in range(8) for j in range(8)]
+    # "8x8 image of integer pixels in the range 0..16."
+    columns = [f'pixel[{i},{j}]' for i in range(8) for j in range(8)]
 
-    clf = clf.fit(data, digits.target)
+    clf = clf.fit(digits.data, digits.target)
 
     X = None
     if pickX:
         X = digits.data[np.random.randint(0, len(digits.data)),:]
 
-    st = dtreeviz(clf, data, digits.target,target_name='number',
-                  feature_names=data.columns, orientation=orientation,
+    st = dtreeviz(clf, digits.data, digits.target,target_name='number',
+                  feature_names=columns, orientation=orientation,
                   class_names=[chr(c) for c in range(ord('0'),ord('9')+1)],
                   fancy=fancy, histtype='bar',
                   X=X)
@@ -158,17 +151,14 @@ def viz_wine(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     wine = load_wine()
 
-    data = pd.DataFrame(wine.data)
-    data.columns = wine.feature_names
-
-    clf = clf.fit(data, wine.target)
+    clf = clf.fit(wine.data, wine.target)
 
     X = None
     if pickX:
         X = wine.data[np.random.randint(0, len(wine.data)),:]
 
-    st = dtreeviz(clf, data, wine.target,target_name='wine',
-                  feature_names=data.columns, orientation=orientation,
+    st = dtreeviz(clf, wine.data, wine.target,target_name='wine',
+                  feature_names=wine.feature_names, orientation=orientation,
                   class_names=list(wine.target_names),
                   fancy=fancy,
                   X=X)
@@ -178,17 +168,14 @@ def viz_breast_cancer(orientation="TD", max_depth=3, random_state=666, fancy=Tru
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     cancer = load_breast_cancer()
 
-    data = pd.DataFrame(cancer.data)
-    data.columns = cancer.feature_names
-
-    clf = clf.fit(data, cancer.target)
+    clf = clf.fit(cancer.data, cancer.target)
 
     X = None
     if pickX:
         X = cancer.data[np.random.randint(0, len(cancer)),:]
 
-    st = dtreeviz(clf, data, cancer.target,target_name='cancer',
-                  feature_names=data.columns, orientation=orientation,
+    st = dtreeviz(clf, cancer.data, cancer.target, target_name='cancer',
+                  feature_names=cancer.feature_names, orientation=orientation,
                   class_names=list(cancer.target_names),
                   fancy=fancy,
                   X=X)
@@ -206,7 +193,7 @@ def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True, p
 
     X = None
     if pickX:
-        X = know.iloc[np.random.randint(0, len(know))]
+        X = X_train.iloc[np.random.randint(0, len(know))]
 
     st = dtreeviz(clf, X_train, y_train, target_name='UNS',
                   feature_names=X_train.columns.values, orientation=orientation,
@@ -252,7 +239,7 @@ if __name__ == '__main__':
     print(f"tmp dir is {tempfile.gettempdir()}")
     for f in viz_funcs:
         name = f.__name__[len("viz_"):]
-        # if name!='boston': continue
+        # if name!='knowledge': continue
         save(name, dirname, "TD", 2)
         save(name, dirname, "TD", 4)
         if name=='iris':

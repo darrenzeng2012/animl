@@ -219,8 +219,8 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
         display_feature_names = feature_names
         highlight_feature_indexes = features_used
         if (orientation=='TD' and len(X)>max_X_features_TD) or\
-          (orientation == 'LR' and len(X) > max_X_features_LR):
-        # squash all features down to just those used
+           (orientation == 'LR' and len(X) > max_X_features_LR):
+            # squash all features down to just those used
             display_X = [X[i] for i in features_used] + ['...']
             display_feature_names = [node.feature_name() for node in path[:-1]] + ['...']
             highlight_feature_indexes = range(0,len(features_used))

@@ -42,11 +42,6 @@ def viz_boston(orientation="TD", max_depth=3, random_state=666, fancy=True):
 
     regr = regr.fit(boston.data, boston.target)
 
-    shadow_tree = ShadowDecTree(regr, boston.data, boston.target,
-                                feature_names=boston.feature_names)
-
-    x = boston.data[10,:]
-
     st = dtreeviz(regr, boston.data, boston.target, target_name='price',
                   feature_names=boston.feature_names, orientation=orientation,
                   fancy=fancy,
@@ -58,7 +53,7 @@ def viz_boston(orientation="TD", max_depth=3, random_state=666, fancy=True):
 
     return st
 
-def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=False):
+def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True):
     # data from https://archive.ics.uci.edu/ml/datasets/User+Knowledge+Modeling
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     know = pd.read_csv("data/knowledge.csv")
@@ -68,19 +63,39 @@ def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True, p
     X_train, y_train = know.drop('UNS', axis=1), know['UNS']
     clf = clf.fit(X_train, y_train)
 
+    X = know.iloc[np.random.randint(0, len(know))]
+
     st = dtreeviz(clf, X_train, y_train, target_name='UNS',
                   feature_names=X_train.columns.values, orientation=orientation,
                   class_names=target_names,
                   fancy=fancy,
-                  X=X_train.iloc[3,:])
+                  X=X)
     return st
 
+#
+# def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=False):
+#     # data from https://archive.ics.uci.edu/ml/datasets/User+Knowledge+Modeling
+#     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
+#     know = pd.read_csv("data/knowledge.csv")
+#     target_names = ['very_low', 'Low', 'Middle', 'High']
+#     know['UNS'] = know['UNS'].map({n: i for i, n in enumerate(target_names)})
+#
+#     X_train, y_train = know.drop('UNS', axis=1), know['UNS']
+#     clf = clf.fit(X_train, y_train)
+#
+#     st = dtreeviz(clf, X_train, y_train, target_name='UNS',
+#                   feature_names=X_train.columns.values, orientation=orientation,
+#                   class_names=target_names,
+#                   fancy=fancy,
+#                   X=X_train.iloc[3,:])
+#     return st
 
-st = viz_boston(fancy=True, max_depth=3, orientation='TD')
+
+#st = viz_boston(fancy=True, max_depth=3, orientation='TD')
 #st = viz_breast_cancer(fancy=True, orientation='TD')
 #st = viz_iris(fancy=True, orientation='TD')
 #st = viz_digits(fancy=True, orientation='TD')
-#st = viz_knowledge(fancy=True, orientation='TD', max_depth=3)
+st = viz_knowledge(fancy=True, orientation='TD', max_depth=3)
 g = graphviz.Source(st)
 
 tmp = tempfile.gettempdir()
