@@ -276,7 +276,7 @@ class ShadowDecTreeNode:
 
     def __str__(self):
         if self.left is None and self.right is None:
-            return "pred={value},n={n}".format(value=round(self.prediction(),1), n=self.nsamples())
+            return "<pred={value},n={n}>".format(value=round(self.prediction(),1), n=self.nsamples())
         else:
             return "({f}@{s} {left} {right})".format(f=self.feature_name(),
                                                      s=round(self.split(),1),

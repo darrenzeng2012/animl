@@ -50,6 +50,7 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
              precision  : int = 2,
              orientation : ('TD','LR') ="TD",
              show_root_edge_labels : bool = True,
+             show_node_labels : bool = False,
              fancy : bool = True,
              histtype: ('bar', 'barstacked') = 'barstacked',
              highlight_path : List[int] = [],
@@ -73,6 +74,7 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
                       after the decimal point. Default is 2.
     :param orientation:  Is the tree top down, "TD", or left to right, "LR"?
     :param show_root_edge_labels: Include < and >= on the edges emanating from the root?
+    :param show_node_labels: Add "Node id" to top of each node in graph for educational purposes
     :param fancy:
     :param histtype: [For classifiers] Either 'bar' or 'barstacked' to indicate
                      histogram type. We find that 'barstacked' looks great up to about.
@@ -109,7 +111,9 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
     def split_node(name, node_name, split):
         img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
         if fancy:
+            labelgraph = node_label(node) if show_node_labels else ''
             html = f"""<table border="0">
+            {labelgraph}
             <tr>
                     <td port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}.svg"/></td>
             </tr>
@@ -127,7 +131,9 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
         img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
         value = node.prediction()
         if fancy:
+            labelgraph = node_label(node) if show_node_labels else ''
             html = f"""<table border="0">
+            {labelgraph}
             <tr>
                     <td port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}.svg"/></td>
             </tr>
@@ -171,7 +177,9 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
 
     def class_leaf_node(node, label_fontsize: int = 12):
         img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
+        labelgraph = node_label(node) if show_node_labels else ''
         html = f"""<table border="0" CELLBORDER="0">
+        {labelgraph}
         <tr>
                 <td port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}.svg"/></td>
         </tr>
@@ -180,6 +188,9 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
             return f'leaf{node.id} [margin="0" shape=box penwidth=".5" color="{HIGHLIGHT_COLOR}" style="dashed" label=<{html}>]'
         else:
             return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
+
+    def node_label(node):
+        return f'<tr><td><font face="Helvetica" point-size="14"><i>Node {node.id}</i></font></td></tr>'
 
     def class_legend_html(label_fontsize: int = 12):
         elements = []
@@ -371,12 +382,14 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
     # non leaf edges with > and <=
     for node in shadow_tree.internal:
         nname = node_name(node)
-        left_node_name = node_name(node.left)
         if node.left.isleaf():
             left_node_name ='leaf%d' % node.left.id
-        right_node_name = node_name(node.right)
+        else:
+            left_node_name = node_name(node.left)
         if node.right.isleaf():
             right_node_name ='leaf%d' % node.right.id
+        else:
+            right_node_name = node_name(node.right)
         llabel = all_llabel
         rlabel = all_rlabel
         if node==shadow_tree.root:
