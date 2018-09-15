@@ -42,10 +42,12 @@ def viz_boston(orientation="TD", max_depth=3, random_state=666, fancy=True):
 
     regr = regr.fit(boston.data, boston.target)
 
+    X = boston.data[np.random.randint(0, len(boston.data)),:]
+
     st = dtreeviz(regr, boston.data, boston.target, target_name='price',
                   feature_names=boston.feature_names, orientation=orientation,
                   fancy=fancy,
-                  X=None)
+                  X=X)
 
     export_graphviz(regr, out_file="/tmp/boston-scikit-tree.dot",
                     filled=True, rounded=True,
@@ -91,11 +93,11 @@ def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True):
 #     return st
 
 
-#st = viz_boston(fancy=True, max_depth=3, orientation='TD')
+st = viz_boston(fancy=False, max_depth=5, orientation='LR')
 #st = viz_breast_cancer(fancy=True, orientation='TD')
 #st = viz_iris(fancy=True, orientation='TD')
 #st = viz_digits(fancy=True, orientation='TD')
-st = viz_knowledge(fancy=False, orientation='TD', max_depth=15)
+#st = viz_knowledge(fancy=False, orientation='TD', max_depth=15)
 g = graphviz.Source(st)
 
 tmp = tempfile.gettempdir()

@@ -247,6 +247,9 @@ if __name__ == '__main__':
             save(name, dirname, "TD", 5, pickX=True)
         if name=='boston':
             save(name, dirname, "TD", 3)
+            save(name, dirname, "LR", 5, fancy=False, pickX=True)
+        if name=='knowledge':
+            save(name, dirname, "TD", 15, fancy=False, pickX=True)
 
         save(name, dirname, "LR", 3)
         save(name, dirname, "TD", 4, fancy=False)

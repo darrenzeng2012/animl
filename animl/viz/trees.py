@@ -128,9 +128,9 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
 
 
     def regr_leaf_node(node, label_fontsize: int = 12):
-        img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
         value = node.prediction()
         if fancy:
+            img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
             labelgraph = node_label(node) if show_node_labels else ''
             html = f"""<table border="0">
             {labelgraph}
@@ -150,19 +150,34 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
             gr = f'leaf{node.id} [fixedsize="true" width="{width}" style=filled fillcolor="{YELLOW}" shape=circle label=""]'
 
             if orientation == 'TD':
-                labeldistance = "1.5"
+                if fancy:
+                    labeldistance = "1.5"
+                else:
+                    labeldistance = "2"
             else:
-                labeldistance = "2.2"
+                if fancy:
+                    labeldistance = "2.2"
+                else:
+                    labeldistance = "3.7"
             # label = f'<font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">n={node.nsamples()}</font>'
-            label = f"""<table border="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
-            <tr>
-                    <td align="center" CELLPADDING="0" CELLSPACING="0"><font face="Helvetica" color="#444443" point-size="11">{target_name}={round(value)}</font></td>
-            </tr>
-            <tr>
-                    <td align="center" CELLPADDING="0" CELLSPACING="0"><font face="Helvetica" color="#444443" point-size="11">n={node.nsamples()}</font></td>
-            </tr>
-            </table>
-            """
+            if orientation=='TD':
+                label = f"""<table border="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
+                <tr>
+                        <td align="center" CELLPADDING="0" CELLSPACING="0"><font face="Helvetica" color="#444443" point-size="11">{target_name}={round(value)}</font></td>
+                </tr>
+                <tr>
+                        <td align="center" CELLPADDING="0" CELLSPACING="0"><font face="Helvetica" color="#444443" point-size="11">n={node.nsamples()}</font></td>
+                </tr>
+                </table>
+                """
+            else:
+                label = f"""<table border="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
+                <tr>
+                        <td align="right" CELLPADDING="0" CELLSPACING="0"><font face="Helvetica" color="#444443" point-size="11">{target_name}={round(value)}, n={node.nsamples()}</font></td>
+                </tr>
+                </table>
+                """
+
             spacer_width = .15 * (1 / width) # smaller nodes need bigger space for labels
             annot = f"""
                leaf{node.id}_annot [shape=none width="{spacer_width}" label=""]
@@ -283,9 +298,16 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
             {leaf} -> X_y [dir=back; penwidth="1.2" color="{HIGHLIGHT_COLOR}" label=<<font face="Helvetica" color="{GREY}" point-size="{11}">{edge_label}</font>>]
             """
 
-    ranksep = ".22"
     if orientation=="TD":
         ranksep = ".2"
+        nodesep = "0.1"
+    else:
+        if fancy:
+            ranksep = ".22"
+            nodesep = "0.1"
+        else:
+            ranksep = ".05"
+            nodesep = "0.09"
 
     tmp = tempfile.gettempdir()
 
@@ -416,7 +438,7 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
     st = f"""
 digraph G {{
     splines=line;
-    nodesep=0.1;
+    nodesep={nodesep};
     ranksep={ranksep};
     rankdir={orientation};
     margin=0.0;
