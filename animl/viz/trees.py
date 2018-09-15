@@ -109,8 +109,8 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
         return node_name
 
     def split_node(name, node_name, split):
-        img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
         if fancy:
+            img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
             labelgraph = node_label(node) if show_node_labels else ''
             html = f"""<table border="0">
             {labelgraph}
@@ -530,7 +530,7 @@ def class_leaf_viz(node : ShadowDecTreeNode,
                    colors : List[str],
                    filename: str):
     size = prop_size(node.nsamples(), counts=node.shadow_tree.leaf_sample_counts(),
-                     output_range=(1.01, 2.7))
+                     output_range=(1.01, 1.5))
     # we visually need n=1 and n=9 to appear different but diff between 300 and 400 is no big deal
     size = np.sqrt(np.log(size))
     draw_piechart(node.class_counts(), size=size, colors=colors, filename=filename, label=f"n={node.nsamples()}")
