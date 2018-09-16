@@ -10,6 +10,8 @@ from collections import defaultdict, Sequence
 import string
 import re
 from typing import Mapping, List, Tuple
+from numbers import Number
+
 
 class ShadowDecTree:
     """
@@ -30,7 +32,7 @@ class ShadowDecTree:
 
     Parameters
     ----------
-    class_names : (List[str],Mapping[int,str]). A mappingf rom target value
+    class_names : (List[str],Mapping[int,str]). A mapping from target value
                   to target class name. If you pass in a list of strings,
                   target value i must be associated with class name[i]. You
                   can also pass in a dict that maps value to name.
@@ -43,6 +45,10 @@ class ShadowDecTree:
         self.tree_model = tree_model
         self.feature_names = feature_names
         self.class_names = class_names
+
+        if getattr(tree_model, 'tree_') is None: # make sure model is fit
+            tree_model.fit(X_train, y_train)
+
         if tree_model.tree_.n_classes > 1:
             if isinstance(self.class_names, dict):
                 self.class_names = self.class_names
@@ -99,6 +105,60 @@ class ShadowDecTree:
     def isclassifier(self):
         return self.tree_model.tree_.n_classes > 1
 
+    def get_split_node_heights(self, X_train, y_train, nbins) -> Mapping[int,int]:
+        class_values = self.unique_target_values
+        node_heights = {}
+        # print(f"Goal {nbins} bins")
+        for node in self.internal:
+            # print(node.feature_name(), node.id)
+            X_feature = X_train[:, node.feature()]
+            overall_feature_range = (np.min(X_feature), np.max(X_feature))
+            # print(f"range {overall_feature_range}")
+            r = overall_feature_range[1] - overall_feature_range[0]
+            binwidth = r / nbins
+            bins = np.linspace(overall_feature_range[0],
+                               overall_feature_range[1], nbins+1)
+            # bins = np.arange(overall_feature_range[0],
+            #                  overall_feature_range[1] + binwidth, binwidth)
+            # print(f"\tlen(bins)={len(bins):2d} bins={bins}")
+            X, y = X_feature[node.samples()], y_train[node.samples()]
+            X_hist = [X[y == cl] for cl in class_values]
+            height_of_bins = np.zeros(nbins)
+            for cl in class_values:
+                hist, foo = np.histogram(X_hist[cl], bins=bins, range=overall_feature_range)
+                # print(f"class {cl}: goal_n={len(bins):2d} n={len(hist):2d} {hist}")
+                height_of_bins += hist
+            node_heights[node.id] = np.max(height_of_bins)
+
+            # print(f"\tmax={np.max(height_of_bins):2.0f}, heights={list(height_of_bins)}, {len(height_of_bins)} bins")
+        return node_heights
+
+    def predict(self, x : np.ndarray) -> Tuple[Number,List]:
+        """
+        Given an x-vector of features, return predicted class or value based upon
+        this tree. Also return path from root to leaf as 2nd value in return tuple.
+        Recursively walk down tree from root to appropriate leaf by
+        comparing feature in x to node's split value. Also return
+
+        :param x: Feature vector to run down the tree to a leaf.
+        :type x: np.ndarray
+        :return: Predicted class or value based
+        :rtype: Number
+        """
+        def walk(t, x, path):
+            if t is None:
+                return None
+            path.append(t)
+            if t.isleaf():
+                return t
+            if x[t.feature()] < t.split():
+                return walk(t.left, x, path)
+            return walk(t.right, x, path)
+
+        path = []
+        leaf = walk(self.root, x, path)
+        return leaf.prediction(), path
+
     @staticmethod
     def node_samples(tree_model, data) -> Mapping[int, list]:
         """
@@ -129,21 +189,21 @@ class ShadowDecTreeNode:
     samples examined at each decision node or at each leaf node are
     saved into field node_samples.
     """
-    def __init__(self, shadowtree, id, left=None, right=None):
-        self.shadowtree = shadowtree
+    def __init__(self, shadow_tree, id, left=None, right=None):
+        self.shadow_tree = shadow_tree
         self.id = id
         self.left = left
         self.right = right
 
     def split(self) -> (int,float):
-        return self.shadowtree.tree_model.tree_.threshold[self.id]
+        return self.shadow_tree.tree_model.tree_.threshold[self.id]
 
     def feature(self) -> int:
-        return self.shadowtree.tree_model.tree_.feature[self.id]
+        return self.shadow_tree.tree_model.tree_.feature[self.id]
 
     def feature_name(self) -> (str,None):
-        if self.shadowtree.feature_names is not None:
-            return self.shadowtree.feature_names[ self.feature() ]
+        if self.shadow_tree.feature_names is not None:
+            return self.shadow_tree.feature_names[ self.feature()]
         return None
 
     def samples(self) -> List[int]:
@@ -153,7 +213,7 @@ class ShadowDecTreeNode:
         or class.  If this is an internal node, it is the number of samples used
         to compute the split point.
         """
-        return self.shadowtree.node_to_samples[self.id]
+        return self.shadow_tree.node_to_samples[self.id]
 
     def nsamples(self) -> int:
         """
@@ -162,14 +222,14 @@ class ShadowDecTreeNode:
         or class. If this is an internal node, it is the number of samples used
         to compute the split point.
         """
-        return self.shadowtree.tree_model.tree_.n_node_samples[self.id] # same as len(self.node_samples)
+        return self.shadow_tree.tree_model.tree_.n_node_samples[self.id] # same as len(self.node_samples)
 
     def split_samples(self) -> Tuple[np.ndarray, np.ndarray]:
         """
         Return the list of indexes to the left and the right of the split value.
         """
         samples = np.array(self.samples())
-        node_X_data = self.shadowtree.X_train[samples,self.feature()]
+        node_X_data = self.shadow_tree.X_train[samples, self.feature()]
         split = self.split()
         left = np.nonzero(node_X_data < split)[0]
         right = np.nonzero(node_X_data >= split)[0]
@@ -179,29 +239,31 @@ class ShadowDecTreeNode:
         return self.left is None and self.right is None
 
     def isclassifier(self):
-        return self.shadowtree.tree_model.tree_.n_classes > 1
+        return self.shadow_tree.tree_model.tree_.n_classes > 1
 
-    def prediction(self) -> (int,None):
+    def prediction(self) -> (Number,None):
         """
         If this is a leaf node, return the predicted continuous value, if this is a
         regressor, or the class number, if this is a classifier.
         """
         if not self.isleaf(): return None
         if self.isclassifier():
-            counts = np.array(tree.value[self.id][0])
+            counts = np.array(self.shadow_tree.tree_model.tree_.value[self.id][0])
             predicted_class = np.argmax(counts)
             return predicted_class
         else:
-            return self.shadowtree.tree_model.tree_.value[self.id][0][0]
+            return self.shadow_tree.tree_model.tree_.value[self.id][0][0]
 
     def prediction_name(self) -> (str,None):
         """
         If the tree model is a classifier and we know the class names,
         return the class name associated with the prediction for this leaf node.
+        Return prediction class or value otherwise.
         """
         if self.isclassifier():
-            return self.shadowtree.class_names[ self.prediction() ]
-        return None
+            if self.shadow_tree.class_names is not None:
+                return self.shadow_tree.class_names[self.prediction()]
+        return self.prediction()
 
     def class_counts(self) -> (List[int],None):
         """
@@ -209,12 +271,12 @@ class ShadowDecTreeNode:
         associated with each class.
         """
         if self.isclassifier():
-            return np.array(self.shadowtree.tree_model.tree_.value[self.id][0], dtype=int)
+            return np.array(self.shadow_tree.tree_model.tree_.value[self.id][0], dtype=int)
         return None
 
     def __str__(self):
         if self.left is None and self.right is None:
-            return "pred={value},n={n}".format(value=round(self.prediction(),1), n=self.nsamples())
+            return "<pred={value},n={n}>".format(value=round(self.prediction(),1), n=self.nsamples())
         else:
             return "({f}@{s} {left} {right})".format(f=self.feature_name(),
                                                      s=round(self.split(),1),
