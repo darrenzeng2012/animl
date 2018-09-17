@@ -29,7 +29,7 @@ brew install graphviz --with-librsvg --with-app --with-pango
 `dtree`: Main function to create decision tree visualization. Given a decision tree regressor or classifier, creates and returns a tree visualization using the graphviz (DOT) language.
 
 
-* **Regression decision tree **:   
+* **Regression decision tree**:   
 The default orientation of tree is top down but you can change it to left to right using `orientation="LR"`. `view()` gives a pop up window with rendered graphviz object. 
 
 ```bash
@@ -49,10 +49,10 @@ g = graphviz.Source(st, format='pdf')
 g.view()              
 ```
   
-<img src=testing/samples/boston-TD-2.png width=320 height=320>
+<img src=testing/samples/boston-TD-2.png width=380 height=320>
   
   
-* **Classification decision tree **:  
+* **Classification decision tree**:  
 An additional argument of `class_names` giving a mapping of class value with class name is required for classification trees. 
 
 ```bash
@@ -76,8 +76,8 @@ g.view()
 <img src=testing/samples/iris-TD-2.png width=320 height=320>
 
 * **Prediction path**:  
-You need to pass the additional `X` argument
-
+Highlights the decision nodes in which the feature value of single observation passed in argument `X` falls. Also gives the values 
+  
 ```bash
 regr = tree.DecisionTreeRegressor(max_depth=3)  # limit depth of tree
 diabetes = load_diabetes()
@@ -90,11 +90,10 @@ st = dtreeviz(regr, diabetes.data, diabetes.target, target_name='value',
 g = graphviz.Source(st, format='pdf')
 g.view()   
 ```
-<img src=testing/samples/diabetes-TD-3-X.png width=320 height=320>
-
-Creates boxes around decision nodes and shows the feature values for given X. The colored feature in the feature vector are those features which led to the selected path. 
-
-* **Simple tree version**:  
+<img src=testing/samples/diabetes-TD-3-X.png width=420 height=350>
+  
+* **Simple non-fancy tree**:  
+Simple tree without histograms or scatterplots for decision nodes. 
 `fancy=False`  
   
 ```bash
