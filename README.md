@@ -6,7 +6,7 @@ Decision trees are the fundamental building block of gradient boosting machines 
 
 The visualizations are inspired by an educational animiation by [R2D3](http://www.r2d3.us/); [A visual introduction to machine learning](http://www.r2d3.us/visual-intro-to-machine-learning-part-1/). With animl, you can visualize how the feature space is split up at decision nodes, how the training samples get ditributed in leaf nodes and how the tree makes prediction for a single observation. These operations are very critical to grasp for someone who wants to understand how classfication or regression decision tree works. 
 
-There are lots of intricaties in the plots that Terence had to obsess over during the contruction of the library. See [How to visualize decision tree models](https://www.google.com/) for deeper discussion of our dicision tree visualization tool and how we have chosen to visualize the feature-target space of a decision tree. 
+There are lots of intricaties in the plots that Terence had to obsess over during the contruction of the library. See [How to visualize decision tree models](https://www.google.com/) for deeper discussion of our decision tree visualization tool and how we have chosen to visualize the feature-target space of a decision tree. 
 
 
 ## Requirements
@@ -90,7 +90,7 @@ st = dtreeviz(regr, diabetes.data, diabetes.target, target_name='value',
 g = graphviz.Source(st, format='pdf')
 g.view()   
 ```
-<img src=testing/samples/diabetes-TD-3-X.png width=480 height=380>
+<img src=testing/samples/diabetes-TD-3-X.png width=540 height=380>
   
 * **Simple non-fancy tree**:  
 Simple tree without histograms or scatterplots for decision nodes. 
@@ -109,7 +109,7 @@ g = graphviz.Source(st, format='pdf')
 g.view()  
 ```
 
-<img src=testing/samples/breast_cancer-TD-4-simple.png width=380 height=320>
+<img src=testing/samples/breast_cancer-TD-4-simple.png width=420 height=320>
 
 
 For more examples and different cases, please see the jupyter notebook full of examples.
