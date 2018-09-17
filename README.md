@@ -76,7 +76,7 @@ g.view()
 <img src=testing/samples/iris-TD-2.png width=320 height=320>
 
 * **Prediction path**:  
-Highlights the decision nodes in which the feature value of single observation passed in argument `X` falls. Also gives the values 
+Highlights the decision nodes in which the feature value of single observation passed in argument `X` falls. Gives feature values of the observation and highlights features which are used by tree to traverse path. 
   
 ```bash
 regr = tree.DecisionTreeRegressor(max_depth=3)  # limit depth of tree
@@ -109,7 +109,7 @@ g = graphviz.Source(st, format='pdf')
 g.view()  
 ```
 
-<img src=testing/samples/breast_cancer-TD-4-simple.png width=420 height=320>
+<img src=testing/samples/breast_cancer-TD-4-simple.png width=450 height=320>
 
 
 For more examples and different cases, please see the jupyter notebook full of examples.
