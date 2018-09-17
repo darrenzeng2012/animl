@@ -49,7 +49,7 @@ g = graphviz.Source(st, format='pdf')
 g.view()              
 ```
   
-<img src=testing/samples/boston-TD-2.png width=380 height=320>
+<img src=testing/samples/boston-TD-2.png width=420 height=320>
   
   
 * **Classification decision tree**:  
@@ -90,7 +90,7 @@ st = dtreeviz(regr, diabetes.data, diabetes.target, target_name='value',
 g = graphviz.Source(st, format='pdf')
 g.view()   
 ```
-<img src=testing/samples/diabetes-TD-3-X.png width=420 height=350>
+<img src=testing/samples/diabetes-TD-3-X.png width=480 height=380>
   
 * **Simple non-fancy tree**:  
 Simple tree without histograms or scatterplots for decision nodes. 
@@ -109,7 +109,7 @@ g = graphviz.Source(st, format='pdf')
 g.view()  
 ```
 
-<img src=testing/samples/breast_cancer-TD-4-simple.png width=320 height=320>
+<img src=testing/samples/breast_cancer-TD-4-simple.png width=380 height=320>
 
 
 For more examples and different cases, please see the jupyter notebook full of examples.
