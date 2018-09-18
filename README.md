@@ -90,7 +90,7 @@ st = dtreeviz(regr, diabetes.data, diabetes.target, target_name='value',
 g = graphviz.Source(st, format='pdf')
 g.view()   
 ```
-<img src=testing/samples/diabetes-TD-3-X.png width=540 height=380>
+<img src=testing/samples/diabetes-TD-3-X.png width=80% height=50%>
   
 * **Simple non-fancy tree**:  
 Simple tree without histograms or scatterplots for decision nodes. 
