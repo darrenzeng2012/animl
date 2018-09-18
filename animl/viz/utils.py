@@ -2,6 +2,8 @@ import xml.etree.cElementTree as ET
 
 def inline_svg_images(svg) -> str:
     """
+    Inline IMAGE tag refs in graphviz/dot -> SVG generated files.
+
     Convert all image tag refs directly under g tags like:
 
     <g id="node1" class="node">
@@ -41,8 +43,6 @@ def inline_svg_images(svg) -> str:
     # Find all image tags in document (must use svg namespace)
     image_tags = tree.findall(".//svg:g/svg:image", ns)
     for img in image_tags:
-        img_attrib = {kv[0]:kv[1] for kv in img.attrib.items() if kv[0] not in {"width","height"}}
-
         # load ref'd image and get svg root
         filename = img.attrib["{http://www.w3.org/1999/xlink}href"]
         with open(filename) as f:
@@ -54,16 +54,17 @@ def inline_svg_images(svg) -> str:
         del imgroot.attrib["viewBox"]
         # replace IMAGE with SVG tag
         p = parent_map[img]
-        print("BEFORE " + ', '.join([str(c) for c in p]))
+        # print("BEFORE " + ', '.join([str(c) for c in p]))
         p.append(imgroot)
         p.remove(img)
-        print("AFTER " + ', '.join([str(c) for c in p]))
+        # print("AFTER " + ', '.join([str(c) for c in p]))
 
     xml_str = ET.tostring(root).decode()
     return xml_str
 
 
 if __name__ == '__main__':
+    # test rig
     with open("/tmp/foo.svg") as f:
         svg = f.read()
 
