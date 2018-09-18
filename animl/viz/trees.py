@@ -309,8 +309,8 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
             ranksep = ".05"
             nodesep = "0.09"
 
-    # tmp = tempfile.gettempdir()
-    tmp = "/tmp"
+    tmp = tempfile.gettempdir()
+    # tmp = "/tmp"
 
     shadow_tree = ShadowDecTree(tree_model, X_train, y_train,
                                 feature_names=feature_names, class_names=class_names)
