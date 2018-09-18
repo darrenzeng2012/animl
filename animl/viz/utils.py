@@ -42,20 +42,25 @@ def inline_svg_images(svg) -> str:
     image_tags = tree.findall(".//svg:g/svg:image", ns)
     for img in image_tags:
         img_attrib = {kv[0]:kv[1] for kv in img.attrib.items() if kv[0] not in {"width","height"}}
-        # print(img_attrib)
+
+        # load ref'd image and get svg root
         filename = img.attrib["{http://www.w3.org/1999/xlink}href"]
         with open(filename) as f:
             imgsvg = f.read()
         imgroot = ET.fromstring(imgsvg)
-        w = imgroot.attrib['width']
-        h = imgroot.attrib['height']
-        content = [child for child in imgroot]
-        # print(ET.tostring(imgroot).decode())
-        print(w,h)
+        for k,v in img.attrib.items(): # copy IMAGE tag attributes to svg from image file
+            if k not in {"width", "height", "{http://www.w3.org/1999/xlink}href"}:
+                imgroot.attrib[k] = v
+        del imgroot.attrib["viewBox"]
+        # replace IMAGE with SVG tag
         p = parent_map[img]
+        print("BEFORE " + ', '.join([str(c) for c in p]))
+        p.append(imgroot)
         p.remove(img)
-    # xml_str = ET.ElementTree.tostring(tree).decode()
-    # return xml_str
+        print("AFTER " + ', '.join([str(c) for c in p]))
+
+    xml_str = ET.tostring(root).decode()
+    return xml_str
 
 
 if __name__ == '__main__':
@@ -64,3 +69,6 @@ if __name__ == '__main__':
 
     svg2 = inline_svg_images(svg)
     print(svg2)
+
+    with open("/tmp/bar.svg", "w") as f:
+        f.write(svg2)
