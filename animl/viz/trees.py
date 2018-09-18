@@ -2,7 +2,9 @@ import numpy as np
 import pandas as pd
 import graphviz
 from numpy.distutils.system_info import f2py_info
+from pathlib import Path
 from sklearn import tree
+from graphviz.backend import run
 import matplotlib.pyplot as plt
 from animl.trees import *
 from numbers import Number
@@ -10,6 +12,9 @@ import matplotlib.patches as patches
 from scipy import stats
 from sklearn.neighbors import KernelDensity
 import tempfile
+from os import getpid
+
+from animl.viz import utils
 
 YELLOW = "#fefecd" # "#fbfbd0" # "#FBFEB0"
 BLUE = "#D9E6F5"
@@ -41,23 +46,55 @@ color_blind_friendly_colors = [
     ["#fefecd",'#c7e9b4','#41b6c4','#74add1','#4575b4','#313695','#fee090','#fdae61','#f46d43','#d73027'] # 10
 ]
 
-def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifier),
-             X_train : (pd.DataFrame, np.ndarray),
-             y_train : (pd.Series, np.ndarray),
-             feature_names : List[str],
-             target_name : str,
-             class_names : (Mapping[Number,str],List[str]) = None, # required if classifier
-             precision  : int = 2,
-             orientation : ('TD','LR') ="TD",
-             show_root_edge_labels : bool = True,
-             show_node_labels : bool = False,
-             fancy : bool = True,
+class DTreeViz:
+    def __init__(self,dot):
+        self.dot = dot
+
+    def _repr_svg_(self):
+        tmp = tempfile.gettempdir()
+        filename = f"{tmp}/DTreeViz_{getpid()}.svg"
+        self.save(filename)
+        with open(filename) as f:
+            svg = f.read()
+        return svg
+
+    def view(self):
+        g = graphviz.Source(self.dot)
+        g.view()
+
+    def save(self, filename):
+        path = Path(filename)
+        format = path.suffix[1:] # ".svg" -> "svg" etc...
+        g = graphviz.Source(self.dot, format=format)
+        # cmd = ["dot", "-Tpng", "-o", filename, f"{tmp}/foo.dot"]
+        # stdout, stderr = run(cmd, capture_output=True, check=True)
+        g.render(directory=path.parent, filename=path.stem, view=False, cleanup=True)
+        if format=='svg':
+            # inline all IMAGE tags
+            with open(filename) as f:
+                svg = f.read()
+            inlined = utils.inline_svg_images(svg)
+            with open(filename, "w") as f:
+                f.write(inlined)
+
+
+def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifier),
+             X_train: (pd.DataFrame, np.ndarray),
+             y_train: (pd.Series, np.ndarray),
+             feature_names: List[str],
+             target_name: str,
+             class_names: (Mapping[Number, str], List[str]) = None, # required if classifier
+             precision: int = 2,
+             orientation: ('TD', 'LR') = "TD",
+             show_root_edge_labels: bool = True,
+             show_node_labels: bool = False,
+             fancy: bool = True,
              histtype: ('bar', 'barstacked') = 'barstacked',
-             highlight_path : List[int] = [],
-             X : np.ndarray = None,
-             max_X_features_LR : int = 10,
+             highlight_path: List[int] = [],
+             X: np.ndarray = None,
+             max_X_features_LR: int = 10,
              max_X_features_TD: int = 20) \
-             -> str:
+    -> DTreeViz:
     """
     Given a decision tree regressor or classifier, create and return a tree visualization
     using the graphviz (DOT) language.
@@ -436,7 +473,7 @@ def dtreeviz(tree_model : (tree.DecisionTreeRegressor,tree.DecisionTreeClassifie
         """)
 
     newline = "\n\t"
-    st = f"""
+    dot = f"""
 digraph G {{
     splines=line;
     nodesep={nodesep};
@@ -455,7 +492,7 @@ digraph G {{
 }}
     """
 
-    return st
+    return DTreeViz(dot)
 
 
 def class_split_viz(node: ShadowDecTreeNode,

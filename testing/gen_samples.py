@@ -39,12 +39,12 @@ def viz_boston(orientation="TD", max_depth=3, random_state=666, fancy=True, pick
     if pickX:
         X = boston.data[np.random.randint(0, len(boston.data)),:]
 
-    st = dtreeviz(regr, boston.data, boston.target, target_name='price',
+    viz = dtreeviz(regr, boston.data, boston.target, target_name='price',
                   feature_names=boston.feature_names, orientation=orientation,
                   fancy=fancy,
                   X=X)
 
-    return st
+    return viz
 
 def viz_diabetes(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=False):
     diabetes = load_diabetes()
@@ -56,12 +56,12 @@ def viz_diabetes(orientation="TD", max_depth=3, random_state=666, fancy=True, pi
     if pickX:
         X = diabetes.data[np.random.randint(0, len(diabetes.data)),:]
 
-    st = dtreeviz(regr, diabetes.data, diabetes.target, target_name='progr',
+    viz = dtreeviz(regr, diabetes.data, diabetes.target, target_name='progr',
                   feature_names=diabetes.feature_names, orientation=orientation,
                   fancy=fancy,
                   X=X)
 
-    return st
+    return viz
 
 def viz_sweets(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=False):
     sweets = pd.read_csv("testing/data/sweetrs.csv")
@@ -76,12 +76,12 @@ def viz_sweets(orientation="TD", max_depth=3, random_state=666, fancy=True, pick
     if pickX:
         X = X_train.iloc[np.random.randint(0, len(X_train))]
 
-    st = dtreeviz(regr, X_train, y_train, target_name='rating',
+    viz = dtreeviz(regr, X_train, y_train, target_name='rating',
                   feature_names=sweets.columns, orientation=orientation,
                   fancy=fancy,
                   X=X)
 
-    return st
+    return viz
 
 def viz_fires(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=False):
     fires = pd.read_csv("testing/data/forestfires.csv")
@@ -99,12 +99,12 @@ def viz_fires(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX
     if pickX:
         X = X_train.iloc[np.random.randint(0, len(X_train))].values
 
-    st = dtreeviz(regr, X_train, y_train, target_name='area',
+    viz = dtreeviz(regr, X_train, y_train, target_name='area',
                   feature_names=fires.columns, orientation=orientation,
                   fancy=fancy,
                   X=X)
 
-    return st
+    return viz
 
 
 # CLASSIFICATION
@@ -119,13 +119,13 @@ def viz_iris(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=
     if pickX:
         X = iris.data[np.random.randint(0, len(iris.data)),:]
 
-    st = dtreeviz(clf, iris.data, iris.target,target_name='variety',
+    viz = dtreeviz(clf, iris.data, iris.target, target_name='variety',
                   feature_names=iris.feature_names, orientation=orientation,
-                  class_names=["setosa", "versicolor", "virginica"], # 0,1,2 targets
+                  class_names=["setosa", "versicolor", "virginica"],  # 0,1,2 targets
                   fancy=fancy,
                   X=X)
 
-    return st
+    return viz
 
 def viz_digits(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=False):
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
@@ -140,12 +140,12 @@ def viz_digits(orientation="TD", max_depth=3, random_state=666, fancy=True, pick
     if pickX:
         X = digits.data[np.random.randint(0, len(digits.data)),:]
 
-    st = dtreeviz(clf, digits.data, digits.target,target_name='number',
+    viz = dtreeviz(clf, digits.data, digits.target, target_name='number',
                   feature_names=columns, orientation=orientation,
                   class_names=[chr(c) for c in range(ord('0'),ord('9')+1)],
                   fancy=fancy, histtype='bar',
                   X=X)
-    return st
+    return viz
 
 def viz_wine(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=False):
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
@@ -157,12 +157,12 @@ def viz_wine(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=
     if pickX:
         X = wine.data[np.random.randint(0, len(wine.data)),:]
 
-    st = dtreeviz(clf, wine.data, wine.target,target_name='wine',
+    viz = dtreeviz(clf, wine.data, wine.target, target_name='wine',
                   feature_names=wine.feature_names, orientation=orientation,
                   class_names=list(wine.target_names),
                   fancy=fancy,
                   X=X)
-    return st
+    return viz
 
 def viz_breast_cancer(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=False):
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
@@ -174,12 +174,12 @@ def viz_breast_cancer(orientation="TD", max_depth=3, random_state=666, fancy=Tru
     if pickX:
         X = cancer.data[np.random.randint(0, len(cancer)),:]
 
-    st = dtreeviz(clf, cancer.data, cancer.target, target_name='cancer',
+    viz = dtreeviz(clf, cancer.data, cancer.target, target_name='cancer',
                   feature_names=cancer.feature_names, orientation=orientation,
                   class_names=list(cancer.target_names),
                   fancy=fancy,
                   X=X)
-    return st
+    return viz
 
 def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=False):
     # data from https://archive.ics.uci.edu/ml/datasets/User+Knowledge+Modeling
@@ -195,25 +195,23 @@ def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True, p
     if pickX:
         X = X_train.iloc[np.random.randint(0, len(know))]
 
-    st = dtreeviz(clf, X_train, y_train, target_name='UNS',
+    viz = dtreeviz(clf, X_train, y_train, target_name='UNS',
                   feature_names=X_train.columns.values, orientation=orientation,
                   class_names=target_names,
                   fancy=fancy,
                   X=X)
-    return st
+    return viz
 
 
 def save(name, dirname, orientation, max_depth, fancy=True, pickX=False):
     print(f"Process {name} orientation={orientation} max_depth={max_depth} fancy={fancy}, pickX={pickX}")
 
-    st = f(orientation=orientation, max_depth=max_depth, fancy=fancy, pickX=pickX)
-    # Gen both pdf/png
-    g = graphviz.Source(st, format='pdf') # can't gen svg as it refs files in tmp dir that disappear
+    viz = f(orientation=orientation, max_depth=max_depth, fancy=fancy, pickX=pickX)
     X = "-X" if pickX else ""
     filename = f"{name}-{orientation}-{max_depth}{X}"
     if not fancy:
         filename = filename+"-simple"
-    g.render(directory=dirname, filename=filename, view=False, cleanup=True)
+    viz.save(f"{dirname}/{filename}.svg")
 
     # do it the hard way to set dpi for png
     # g = graphviz.Source(st, format='png')
