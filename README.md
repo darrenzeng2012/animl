@@ -109,7 +109,7 @@ g = graphviz.Source(st, format='pdf')
 g.view()  
 ```
 
-<img src=testing/samples/breast_cancer-TD-4-simple.png width=450 height=320>
+<img src=testing/samples/breast_cancer-TD-4-simple.png width=80% height=50%>
 
 
 For more examples and different cases, please see the jupyter notebook full of examples.
