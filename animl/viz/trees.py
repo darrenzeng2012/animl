@@ -12,7 +12,7 @@ import matplotlib.patches as patches
 from scipy import stats
 from sklearn.neighbors import KernelDensity
 import tempfile
-from os import getpid
+from os import getpid, makedirs
 
 from animl.viz import utils
 
@@ -51,12 +51,18 @@ class DTreeViz:
         self.dot = dot
 
     def _repr_svg_(self):
+        return self.svg()
+
+    def svg(self):
         tmp = tempfile.gettempdir()
         filename = f"{tmp}/DTreeViz_{getpid()}.svg"
         self.save(filename)
         with open(filename) as f:
             svg = f.read()
-        return svg
+        return """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+ """ + svg
 
     def view(self):
         g = graphviz.Source(self.dot)
@@ -64,6 +70,9 @@ class DTreeViz:
 
     def save(self, filename):
         path = Path(filename)
+        if not path.parent.exists:
+            makedirs(path.parent)
+
         format = path.suffix[1:] # ".svg" -> "svg" etc...
         g = graphviz.Source(self.dot, format=format)
         # cmd = ["dot", "-Tpng", "-o", filename, f"{tmp}/foo.dot"]

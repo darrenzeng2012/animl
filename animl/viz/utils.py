@@ -59,6 +59,8 @@ def inline_svg_images(svg) -> str:
         p.remove(img)
         # print("AFTER " + ', '.join([str(c) for c in p]))
 
+    ET.register_namespace('', "http://www.w3.org/2000/svg")
+    ET.register_namespace('xlink', "http://www.w3.org/1999/xlink")
     xml_str = ET.tostring(root).decode()
     return xml_str
 
