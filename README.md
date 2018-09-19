@@ -1,6 +1,10 @@
 # animl
 
-A python machine learning library for scikit-learn decision tree visualization and model interpretation. 
+This is the start of a python machine learning library to augment scikit-learn. At the moment, all we have is functionality for decision tree visualization and model interpretation.
+
+## Decision tree visualization
+
+By [Terence Parr](http://parrt.cs.usfca.edu) and [Prince Grover](https://www.linkedin.com/in/groverpr)
 
 Decision trees are the fundamental building block of gradient boosting machines and Random Forests™, probably the two most popular machine learning models for structured data. Visualizing decision trees is a tremendous aid when learning these models and later, in practice, when interpreting models. Unfortunately, current visualization packages are rudimentary and not immediately helpful to the novice. For example, we couldn't find a library that could visualize how decision nodes split up feature space. Our library could be the first. It also appears uncommon for libraries to support visualizing a specific feature vector as it weaves down through a tree's decision nodes, as we could only find one image showing this (but we didn't exhaustively look through library APIs).
 
@@ -9,7 +13,7 @@ The visualizations are inspired by an educational animiation by [R2D3](http://ww
 There are lots of intricaties in the plots that Terence had to obsess over during the contruction of the library. See [How to visualize decision tree models](https://www.google.com/) for deeper discussion of our decision tree visualization tool and how we have chosen to visualize the feature-target space of a decision tree. 
 
 
-## Requirements
+### Requirements
 
 Needs graphviz/dot lib.
 
@@ -20,11 +24,11 @@ pip install graphviz
 And, on latest mac versions, you need:
 
 ```bash
+brew install poppler # (for svg output to get pdftocairo)
 brew install graphviz --with-librsvg --with-app --with-pango
 ```
 
-
-## Usage
+### Usage
 
 
 `dtree`: Main function to create decision tree visualization. Given a decision tree regressor or classifier, creates and returns a tree visualization using the graphviz (DOT) language.
@@ -127,18 +131,21 @@ viz.view()
 
 For more examples and different implementations, please see the jupyter [notebook](notebooks/examples.ipynb) full of examples.
 
-## Implementation guidelines
+### Implementation guidelines
 
-On latest MAc, make sure to install using 
+At least on the mac, make sure to install using:
 
 ```bash
+brew install poppler # (for svg output to get pdftocairo)
 brew install graphviz --with-librsvg --with-app --with-pango
 ```
 
-Use `setup.py` to make sure the library gets installed properly
+Then use `setup.py` to make sure the library gets installed properly
  
 ```bash 
 python setup.py install -f
 ```
+
+This will push the `animl` library to your local egg cache. E.g., on Terence's box, it add `/Users/parrt/anaconda3/lib/python3.6/site-packages/animl-0.1-py3.6.egg`.
 
 
