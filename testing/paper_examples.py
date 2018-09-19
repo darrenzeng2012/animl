@@ -17,15 +17,13 @@ def viz_boston_one_feature(orientation="TD", max_depth=3, random_state=666, fanc
     y_train = boston.target
     regr.fit(X_train, y_train)
 
-    st = dtreeviz(regr, X_train, y_train, target_name='price',
-                  feature_names=[boston.feature_names[i]], orientation=orientation,
-                  fancy=fancy,
-                  show_node_labels = True,
-                  X=None)
+    viz = dtreeviz(regr, X_train, y_train, target_name='price',
+                   feature_names=[boston.feature_names[i]], orientation=orientation,
+                   fancy=fancy,
+                   show_node_labels=True,
+                   X=None)
 
-    g = graphviz.Source(st)
-    g.render(filename='boston-TD-AGE', directory=parrt_article, view=False, cleanup=True)
-    return g
+    viz.save(f"{parrt_article}/boston-TD-AGE.svg")
 
 def viz_knowledge_one_feature(orientation="TD", max_depth=3, random_state=666, fancy=True):
     # data from https://archive.ics.uci.edu/ml/datasets/User+Knowledge+Modeling
@@ -41,18 +39,14 @@ def viz_knowledge_one_feature(orientation="TD", max_depth=3, random_state=666, f
     X = X_train.iloc[np.random.randint(0, len(X_train))]
     X = None
 
-    st = dtreeviz(clf, X_train, y_train, target_name='UNS',
+    viz = dtreeviz(clf, X_train, y_train, target_name='UNS',
                   feature_names=[the_feature], orientation=orientation,
                   class_names=target_names,
                   show_node_labels = True,
                   fancy=fancy,
                   X=X)
-    g = graphviz.Source(st)
-    g.render(filename='knowledge-TD-PEG', directory=parrt_article, view=False, cleanup=True)
-    return g
 
-g = viz_boston_one_feature(fancy=True, max_depth=3, orientation='TD')
+    viz.save(f"{parrt_article}/knowledge-TD-PEG.svg")
 
-#g = viz_knowledge_one_feature(fancy=True, orientation='TD', max_depth=3)
-
-g.view()
+viz_boston_one_feature(fancy=True, max_depth=3, orientation='TD')
+viz_knowledge_one_feature(fancy=True, orientation='TD', max_depth=3)
