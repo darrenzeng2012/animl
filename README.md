@@ -49,7 +49,7 @@ g = graphviz.Source(st, format='pdf')
 g.view()              
 ```
   
-<img src=testing/samples/boston-TD-2.png width=420 height=320>
+<img src=testing/samples/boston-TD-2.png width=60% height=40%>
   
   
 * **Classification decision tree**:  
@@ -73,7 +73,7 @@ g = graphviz.Source(st, format='pdf')
 g.view()  
 ```
 
-<img src=testing/samples/iris-TD-2.png width=80% height=50% align="center">
+<img src=testing/samples/iris-TD-2.png width=60% height=40% align="center">
 
 * **Prediction path**:  
 Highlights the decision nodes in which the feature value of single observation passed in argument `X` falls. Gives feature values of the observation and highlights features which are used by tree to traverse path. 
