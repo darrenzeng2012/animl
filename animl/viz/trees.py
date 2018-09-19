@@ -54,6 +54,7 @@ class DTreeViz:
         return self.svg()
 
     def svg(self):
+        tmp = tempfile.gettempdir()
         svgfilename = f"{tmp}/DTreeViz_{getpid()}.svg"
         self.save(svgfilename)
         with open(svgfilename) as f:
@@ -77,7 +78,7 @@ class DTreeViz:
             g = graphviz.Source(self.dot, format='pdf')
             g.render(directory=path.parent, filename=path.stem, view=False, cleanup=True)
             cmd = ["pdftocairo", "-svg", pdffilename, filename]
-            print(f"pdftocairo -svg {pdffilename} {filename}")
+            # print(f"pdftocairo -svg {pdffilename} {filename}")
             stdout, stderr = run(cmd, capture_output=True, check=True, quiet=False)
         else:
             g = graphviz.Source(self.dot, format=format)
