@@ -65,7 +65,7 @@ def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True):
     X_train, y_train = know.drop('UNS', axis=1), know['UNS']
     clf = clf.fit(X_train, y_train)
 
-    X = know.iloc[np.random.randint(0, len(know))]
+    X = X_train.iloc[np.random.randint(0, len(know))]
 
     viz = dtreeviz(clf, X_train, y_train, target_name='UNS',
                   feature_names=X_train.columns.values, orientation=orientation,
@@ -105,4 +105,5 @@ viz = viz_knowledge(fancy=True, orientation='TD', max_depth=15)
 # with open("/tmp/t3.dot", "w") as f:
 #     f.write(st+"\n")
 #
-viz.view()
+viz.save("/tmp/t.svg")
+#viz.view()

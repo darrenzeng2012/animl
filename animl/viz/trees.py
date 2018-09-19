@@ -54,15 +54,11 @@ class DTreeViz:
         return self.svg()
 
     def svg(self):
-        tmp = tempfile.gettempdir()
-        filename = f"{tmp}/DTreeViz_{getpid()}.svg"
-        self.save(filename)
-        with open(filename) as f:
+        svgfilename = f"{tmp}/DTreeViz_{getpid()}.svg"
+        self.save(svgfilename)
+        with open(svgfilename) as f:
             svg = f.read()
-        return """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
- "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
- """ + svg
+        return svg
 
     def view(self):
         g = graphviz.Source(self.dot)
@@ -74,17 +70,18 @@ class DTreeViz:
             makedirs(path.parent)
 
         format = path.suffix[1:] # ".svg" -> "svg" etc...
-        g = graphviz.Source(self.dot, format=format)
         # cmd = ["dot", "-Tpng", "-o", filename, f"{tmp}/foo.dot"]
         # stdout, stderr = run(cmd, capture_output=True, check=True)
-        g.render(directory=path.parent, filename=path.stem, view=False, cleanup=True)
         if format=='svg':
-            # inline all IMAGE tags
-            with open(filename) as f:
-                svg = f.read()
-            inlined = utils.inline_svg_images(svg)
-            with open(filename, "w") as f:
-                f.write(inlined)
+            pdffilename = f"{path.parent}/{path.stem}.pdf"
+            g = graphviz.Source(self.dot, format='pdf')
+            g.render(directory=path.parent, filename=path.stem, view=False, cleanup=True)
+            cmd = ["pdftocairo", "-svg", pdffilename, filename]
+            print(f"pdftocairo -svg {pdffilename} {filename}")
+            stdout, stderr = run(cmd, capture_output=True, check=True, quiet=False)
+        else:
+            g = graphviz.Source(self.dot, format=format)
+            g.render(directory=path.parent, filename=path.stem, view=False, cleanup=True)
 
 
 def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifier),
