@@ -15,7 +15,7 @@ def viz_boston_one_feature(orientation="TD", max_depth=3, random_state=666, fanc
     i = 6
     X_train = boston.data[:, i].reshape(-1, 1)
     y_train = boston.target
-    regr = regr.fit(X_train, y_train)
+    regr.fit(X_train, y_train)
 
     st = dtreeviz(regr, X_train, y_train, target_name='price',
                   feature_names=[boston.feature_names[i]], orientation=orientation,
@@ -36,7 +36,7 @@ def viz_knowledge_one_feature(orientation="TD", max_depth=3, random_state=666, f
 
     the_feature = "PEG"
     X_train, y_train = know[[the_feature]], know['UNS']
-    clf = clf.fit(X_train, y_train)
+    clf.fit(X_train, y_train)
 
     X = X_train.iloc[np.random.randint(0, len(X_train))]
     X = None

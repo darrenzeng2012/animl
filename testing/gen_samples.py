@@ -33,7 +33,7 @@ def viz_boston(orientation="TD", max_depth=3, random_state=666, fancy=True, pick
     regr = tree.DecisionTreeRegressor(max_depth=max_depth, random_state=random_state)
     boston = load_boston()
 
-    regr = regr.fit(boston.data, boston.target)
+    regr.fit(boston.data, boston.target)
 
     X = None
     if pickX:
@@ -50,7 +50,7 @@ def viz_diabetes(orientation="TD", max_depth=3, random_state=666, fancy=True, pi
     diabetes = load_diabetes()
 
     regr = tree.DecisionTreeRegressor(max_depth=max_depth, random_state=random_state)
-    regr = regr.fit(diabetes.data, diabetes.target)
+    regr.fit(diabetes.data, diabetes.target)
 
     X = None
     if pickX:
@@ -70,7 +70,7 @@ def viz_sweets(orientation="TD", max_depth=3, random_state=666, fancy=True, pick
     X_train, y_train = sweets.drop('rating', axis=1), sweets['rating']
 
     regr = tree.DecisionTreeRegressor(max_depth=max_depth, random_state=random_state)
-    regr = regr.fit(X_train, y_train)
+    regr.fit(X_train, y_train)
 
     X = None
     if pickX:
@@ -93,7 +93,7 @@ def viz_fires(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX
     X_train, y_train = fires.drop('area', axis=1), fires['area']
 
     regr = tree.DecisionTreeRegressor(max_depth=max_depth, random_state=random_state)
-    regr = regr.fit(X_train, y_train)
+    regr.fit(X_train, y_train)
 
     X = None
     if pickX:
@@ -113,7 +113,7 @@ def viz_iris(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     iris = load_iris()
 
-    clf = clf.fit(iris.data, iris.target)
+    clf.fit(iris.data, iris.target)
 
     X = None
     if pickX:
@@ -134,7 +134,7 @@ def viz_digits(orientation="TD", max_depth=3, random_state=666, fancy=True, pick
     # "8x8 image of integer pixels in the range 0..16."
     columns = [f'pixel[{i},{j}]' for i in range(8) for j in range(8)]
 
-    clf = clf.fit(digits.data, digits.target)
+    clf.fit(digits.data, digits.target)
 
     X = None
     if pickX:
@@ -151,7 +151,7 @@ def viz_wine(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     wine = load_wine()
 
-    clf = clf.fit(wine.data, wine.target)
+    clf.fit(wine.data, wine.target)
 
     X = None
     if pickX:
@@ -168,7 +168,7 @@ def viz_breast_cancer(orientation="TD", max_depth=3, random_state=666, fancy=Tru
     clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     cancer = load_breast_cancer()
 
-    clf = clf.fit(cancer.data, cancer.target)
+    clf.fit(cancer.data, cancer.target)
 
     X = None
     if pickX:
@@ -189,7 +189,7 @@ def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True, p
     know['UNS'] = know['UNS'].map({n: i for i, n in enumerate(target_names)})
 
     X_train, y_train = know.drop('UNS', axis=1), know['UNS']
-    clf = clf.fit(X_train, y_train)
+    clf.fit(X_train, y_train)
 
     X = None
     if pickX:
