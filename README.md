@@ -26,27 +26,35 @@ brew install graphviz --with-librsvg --with-app --with-pango
 
 ## Usage
 
+
 `dtree`: Main function to create decision tree visualization. Given a decision tree regressor or classifier, creates and returns a tree visualization using the graphviz (DOT) language.
 
+* **Required libraries**:  
+Basic libraries and imports that will (might) be needed to generate the sample visualizations shown in examples below. 
+ 
+```bash
+from sklearn.datasets import *
+from sklearn import tree
+from animl.viz.trees import dtreeviz
+from animl.trees import *
+import graphviz
+```
 
 * **Regression decision tree**:   
 The default orientation of tree is top down but you can change it to left to right using `orientation="LR"`. `view()` gives a pop up window with rendered graphviz object. 
 
 ```bash
-from sklearn.datasets import load_boston
-from sklearn import tree
-from animl.viz.trees import dtreeviz
-import graphviz
-
 regr = tree.DecisionTreeRegressor(max_depth=2)
 boston = load_boston()
 regr.fit(boston.data, boston.target)
 
-st = dtreeviz(regr, boston.data, boston.target, target_name='price',
-              feature_names=boston.feature_names)
+viz = dtreeviz(regr,
+               boston.data,
+               boston.target,
+               target_name='price',
+               feature_names=boston.feature_names)
               
-g = graphviz.Source(st, format='pdf')
-g.view()              
+viz.view()              
 ```
   
 <img src=testing/samples/boston-TD-2.png width=60% height=40%>
@@ -56,21 +64,19 @@ g.view()
 An additional argument of `class_names` giving a mapping of class value with class name is required for classification trees. 
 
 ```bash
-from sklearn.datasets import load_iris
-from sklearn import tree
-from animl.viz.trees import dtreeviz
-import graphviz
-
 classifier = tree.DecisionTreeClassifier(max_depth=2)  # limit depth of tree
 iris = load_iris()
 classifier.fit(iris.data, iris.target)
 
-# need class_names for classifier
-st = dtreeviz(classifier, iris.data, iris.target, target_name='variety',
-              feature_names=iris.feature_names, class_names=["setosa", "versicolor", "virginica"] )
+viz = dtreeviz(classifier, 
+               iris.data, 
+               iris.target,
+               target_name='variety',
+              feature_names=iris.feature_names, 
+               class_names=["setosa", "versicolor", "virginica"]  # need class_names for classifier
+              )  
               
-g = graphviz.Source(st, format='pdf')
-g.view()  
+viz.view() 
 ```
 
 <img src=testing/samples/iris-TD-2.png width=60% height=40% align="center">
@@ -79,37 +85,44 @@ g.view()
 Highlights the decision nodes in which the feature value of single observation passed in argument `X` falls. Gives feature values of the observation and highlights features which are used by tree to traverse path. 
   
 ```bash
-regr = tree.DecisionTreeRegressor(max_depth=3)  # limit depth of tree
+regr = tree.DecisionTreeRegressor(max_depth=2)  # limit depth of tree
 diabetes = load_diabetes()
 regr.fit(diabetes.data, diabetes.target)
 X = diabetes.data[np.random.randint(0, len(diabetes.data)),:]  # random sample from training
 
-st = dtreeviz(regr, diabetes.data, diabetes.target, target_name='value',
-              feature_names=diabetes.feature_names, X=X)
+viz = dtreeviz(regr,
+               diabetes.data, 
+               diabetes.target, 
+               target_name='value', 
+               orientation ='LR',  # left-right orientation
+               feature_names=diabetes.feature_names,
+               X=X)  # need to give single observation for prediction
               
-g = graphviz.Source(st, format='pdf')
-g.view()   
+viz.view()  
 ```
-<img src=testing/samples/diabetes-TD-3-X.png width=80% height=50%>
+<img src=testing/samples/diabetes-LR-2-X.png width=80% height=50%>
   
-* **Simple non-fancy tree**:  
+* **Decision tree without scatterplot or histograms for decision nodes**:  
 Simple tree without histograms or scatterplots for decision nodes. 
-`fancy=False`  
+Use argument `fancy=False`  
   
 ```bash
 classifier = tree.DecisionTreeClassifier(max_depth=4)  # limit depth of tree
 cancer = load_breast_cancer()
 classifier.fit(cancer.data, cancer.target)
 
-# need class_names for classifier
-st = dtreeviz(classifier, cancer.data, cancer.target, target_name='cancer',
-              feature_names=cancer.feature_names, class_names=["malignant", "benign"], fancy=False )
+viz = dtreeviz(classifier,
+              cancer.data,
+              cancer.target,
+              target_name='cancer',
+              feature_names=cancer.feature_names, 
+              class_names=["malignant", "benign"],
+              fancy=False )  # fance=False to remove histograms/scatterpots from decision nodes
               
-g = graphviz.Source(st, format='pdf')
-g.view()  
+viz.view() 
 ```
 
-<img src=testing/samples/breast_cancer-TD-4-simple.png width=80% height=50%>
+<img src=testing/samples/breast_cancer-TD-4-simple.png width=80% height=60%>
 
 
 For more examples and different implementations, please see the jupyter notebook full of examples.
