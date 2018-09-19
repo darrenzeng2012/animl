@@ -73,7 +73,7 @@ g = graphviz.Source(st, format='pdf')
 g.view()  
 ```
 
-<img src=testing/samples/iris-TD-2.png width=320 height=320>
+<img src=testing/samples/iris-TD-2.png width=80% height=50% align="center">
 
 * **Prediction path**:  
 Highlights the decision nodes in which the feature value of single observation passed in argument `X` falls. Gives feature values of the observation and highlights features which are used by tree to traverse path. 
@@ -112,6 +112,20 @@ g.view()
 <img src=testing/samples/breast_cancer-TD-4-simple.png width=80% height=50%>
 
 
-For more examples and different cases, please see the jupyter notebook full of examples.
+For more examples and different implementations, please see the jupyter notebook full of examples.
+
+## Implementation guidelines
+
+On latest MAc, make sure to install using 
+
+```bash
+brew install graphviz --with-librsvg --with-app --with-pango
+```
+
+Use `setup.py` to make sure the library gets installed properly
+ 
+```bash 
+python setup.py install -f
+```
 
 
