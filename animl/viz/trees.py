@@ -154,12 +154,12 @@ def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifie
 
     def split_node(name, node_name, split):
         if fancy:
-            img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
+            img_shape = get_SVG_shape(f"{tmp}/node{node.id}_{getpid()}.svg")
             labelgraph = node_label(node) if show_node_labels else ''
             html = f"""<table border="0">
             {labelgraph}
             <tr>
-                    <td port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}.svg"/></td>
+                    <td port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}_{getpid()}.svg"/></td>
             </tr>
             </table>"""
         else:
@@ -173,12 +173,12 @@ def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifie
 
     def regr_leaf_node(node, label_fontsize: int = 12):
         if True: # always generate fancy regr leaves for now but shrink a bit for nonfancy.
-            img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
+            img_shape = get_SVG_shape(f"{tmp}/leaf{node.id}_{getpid()}.svg")
             labelgraph = node_label(node) if show_node_labels else ''
             html = f"""<table border="0">
             {labelgraph}
             <tr>
-                    <td port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}.svg"/></td>
+                    <td port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/leaf{node.id}_{getpid()}.svg"/></td>
             </tr>
             </table>"""
             if node.id in highlight_path:
@@ -235,12 +235,12 @@ def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifie
             return gr + annot
 
     def class_leaf_node(node, label_fontsize: int = 12):
-        img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
+        img_shape = get_SVG_shape(f"{tmp}/leaf{node.id}_{getpid()}.svg")
         labelgraph = node_label(node) if show_node_labels else ''
         html = f"""<table border="0" CELLBORDER="0">
         {labelgraph}
         <tr>
-                <td port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}.svg"/></td>
+                <td port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/leaf{node.id}_{getpid()}.svg"/></td>
         </tr>
         </table>"""
         if node.id in highlight_path:
@@ -256,7 +256,7 @@ def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifie
         for i,cl in enumerate(class_values):
             html = f"""
             <tr>
-                <td border="0" cellspacing="0" cellpadding="0"><img src="{tmp}/legend{i}.svg"/></td>
+                <td border="0" cellspacing="0" cellpadding="0"><img src="{tmp}/legend{i}_{getpid()}.svg"/></td>
                 <td align="left"><font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">{class_names[cl]}</font></td>
             </tr>
             """
@@ -392,7 +392,7 @@ def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifie
         if fancy:
             if shadow_tree.isclassifier():
                 class_split_viz(node, X_train, y_train,
-                                filename=f"{tmp}/node{node.id}.svg",
+                                filename=f"{tmp}/node{node.id}_{getpid()}.svg",
                                 precision=precision,
                                 colors=colors,
                                 histtype=histtype,
@@ -401,7 +401,7 @@ def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifie
                                 highlight_node=node.id in highlight_path)
             else:
                 regr_split_viz(node, X_train, y_train,
-                               filename=f"{tmp}/node{node.id}.svg",
+                               filename=f"{tmp}/node{node.id}_{getpid()}.svg",
                                target_name=target_name,
                                y_range=y_range,
                                precision=precision,
@@ -416,13 +416,13 @@ def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifie
     for node in shadow_tree.leaves:
         if shadow_tree.isclassifier():
             class_leaf_viz(node, colors=color_values,
-                           filename=f"{tmp}/node{node.id}.svg")
+                           filename=f"{tmp}/leaf{node.id}_{getpid()}.svg")
             leaves.append( class_leaf_node(node) )
         else:
             # for now, always gen leaf
             regr_leaf_viz(node, y_train, target_name=target_name,
                           fancy=fancy,
-                          filename=f"{tmp}/node{node.id}.svg",
+                          filename=f"{tmp}/leaf{node.id}_{getpid()}.svg",
                           y_range=y_range, precision=precision)
             leaves.append( regr_leaf_node(node) )
 
@@ -698,14 +698,14 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
                   filename:str=None,
                   y_range=None,
                   precision=1,
-                  label_fontsize:int=9,
+                  label_fontsize: int = 9,
                   ticks_fontsize: int = 8):
     samples = node.samples()
     y = y[samples]
 
     figsize = (.8,1.1)
     if not fancy:
-        figsize = (.7, .8)
+        figsize = (.8, .95)
 
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     ax.tick_params(colors=GREY)
@@ -750,7 +750,7 @@ def draw_legend_boxes(shadow_tree, basefilename):
     colors = {v:color_values[i] for i,v in enumerate(class_values)}
 
     for i, c in enumerate(class_values):
-        draw_colored_box(colors[c], f"{basefilename}{i}.svg")
+        draw_colored_box(colors[c], f"{basefilename}{i}_{getpid()}.svg")
 
 
 def draw_colored_box(color,filename):
