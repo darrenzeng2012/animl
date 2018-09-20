@@ -80,6 +80,8 @@ class DTreeViz:
             g = graphviz.Source(self.dot, format='pdf')
             g.render(directory=path.parent, filename=path.stem, view=False, cleanup=True)
             cmd = ["pdftocairo", "-svg", pdffilename, filename]
+            cmd = ["pdf2svg", pdffilename, filename]
+            print(' '.join(cmd))
             # print(f"pdftocairo -svg {pdffilename} {filename}")
             stdout, stderr = run(cmd, capture_output=True, check=True, quiet=False)
         else:

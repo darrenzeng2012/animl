@@ -24,7 +24,8 @@ pip install graphviz
 And, on latest mac versions, you need:
 
 ```bash
-brew install poppler # (for svg output to get pdftocairo)
+brew install poppler
+brew install pdf2svg
 brew install graphviz --with-librsvg --with-app --with-pango
 ```
 
@@ -136,7 +137,8 @@ For more examples and different implementations, please see the jupyter [noteboo
 At least on the mac, make sure to install using:
 
 ```bash
-brew install poppler # (for svg output to get pdftocairo)
+brew install poppler
+brew install pdf2svg
 brew install graphviz --with-librsvg --with-app --with-pango
 ```
 

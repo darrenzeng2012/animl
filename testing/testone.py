@@ -105,5 +105,5 @@ viz = viz_knowledge(fancy=True, orientation='TD', max_depth=15)
 # with open("/tmp/t3.dot", "w") as f:
 #     f.write(st+"\n")
 #
-#viz.save("/tmp/t.svg")
+viz.save("/tmp/t.svg")
 viz.view()
