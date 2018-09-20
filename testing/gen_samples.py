@@ -237,7 +237,7 @@ if __name__ == '__main__':
     print(f"tmp dir is {tempfile.gettempdir()}")
     for f in viz_funcs:
         name = f.__name__[len("viz_"):]
-        if name!='boston': continue
+        # if name!='boston': continue
         save(name, dirname, "TD", 2)
         save(name, dirname, "TD", 4)
         if name=='iris':
