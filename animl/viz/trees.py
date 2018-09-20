@@ -172,8 +172,7 @@ def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifie
 
 
     def regr_leaf_node(node, label_fontsize: int = 12):
-        value = node.prediction()
-        if fancy:
+        if True: # always generate fancy regr leaves for now but shrink a bit for nonfancy.
             img_shape = get_SVG_shape(f"{tmp}/node{node.id}.svg")
             labelgraph = node_label(node) if show_node_labels else ''
             html = f"""<table border="0">
@@ -187,6 +186,7 @@ def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifie
             else:
                 return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
         else:
+            value = node.prediction()
             width = prop_size(node.nsamples(),
                               counts=shadow_tree.leaf_sample_counts(),
                               output_range=(1.01,1.5))
@@ -419,10 +419,11 @@ def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifie
                            filename=f"{tmp}/node{node.id}.svg")
             leaves.append( class_leaf_node(node) )
         else:
-            if fancy:
-                regr_leaf_viz(node, y_train, target_name=target_name,
-                              filename=f"{tmp}/node{node.id}.svg",
-                              y_range=y_range, precision=precision)
+            # for now, always gen leaf
+            regr_leaf_viz(node, y_train, target_name=target_name,
+                          fancy=fancy,
+                          filename=f"{tmp}/node{node.id}.svg",
+                          y_range=y_range, precision=precision)
             leaves.append( regr_leaf_node(node) )
 
     fromport = ""
@@ -693,6 +694,7 @@ def regr_split_viz(node: ShadowDecTreeNode,
 def regr_leaf_viz(node : ShadowDecTreeNode,
                   y : (pd.Series,np.ndarray),
                   target_name,
+                  fancy,
                   filename:str=None,
                   y_range=None,
                   precision=1,
@@ -701,7 +703,10 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
     samples = node.samples()
     y = y[samples]
 
-    figsize = (.8,1.2)
+    figsize = (.8,1.1)
+    if not fancy:
+        figsize = (.7, .8)
+
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     ax.tick_params(colors=GREY)
 
