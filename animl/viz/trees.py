@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import graphviz
-from numpy.distutils.system_info import f2py_info
 from pathlib import Path
 from sklearn import tree
 from graphviz.backend import run
@@ -9,12 +8,8 @@ import matplotlib.pyplot as plt
 from animl.trees import *
 from numbers import Number
 import matplotlib.patches as patches
-from scipy import stats
-from sklearn.neighbors import KernelDensity
 import tempfile
 from os import getpid, makedirs
-
-from animl.viz import utils
 
 YELLOW = "#fefecd" # "#fbfbd0" # "#FBFEB0"
 BLUE = "#D9E6F5"
@@ -53,6 +48,15 @@ class DTreeViz:
     def _repr_svg_(self):
         return self.svg()
 
+    def topng(self):
+        "Return tree image as png binary data"
+        tmp = tempfile.gettempdir()
+        pngfilename = f"{tmp}/DTreeViz_{getpid()}.png"
+        self.save(pngfilename)
+        with open(pngfilename, "rb") as f:
+            png = f.read()
+        return png
+
     def svg(self):
         tmp = tempfile.gettempdir()
         svgfilename = f"{tmp}/DTreeViz_{getpid()}.svg"
@@ -71,8 +75,6 @@ class DTreeViz:
             makedirs(path.parent)
 
         format = path.suffix[1:] # ".svg" -> "svg" etc...
-        # cmd = ["dot", "-Tpng", "-o", filename, f"{tmp}/foo.dot"]
-        # stdout, stderr = run(cmd, capture_output=True, check=True)
         if format=='svg':
             pdffilename = f"{path.parent}/{path.stem}.pdf"
             g = graphviz.Source(self.dot, format='pdf')
@@ -82,7 +84,11 @@ class DTreeViz:
             stdout, stderr = run(cmd, capture_output=True, check=True, quiet=False)
         else:
             g = graphviz.Source(self.dot, format=format)
-            g.render(directory=path.parent, filename=path.stem, view=False, cleanup=True)
+            fname = g.save(directory=path.parent, filename=path.stem)
+            cmd = ["dot", "-Tpng", "-o", filename, fname]
+            # print(' '.join(cmd))
+            stdout, stderr = run(cmd, capture_output=True, check=True, quiet=False)
+            # g.render(directory=path.parent, filename=path.stem, view=False, cleanup=True)
 
 
 def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifier),
