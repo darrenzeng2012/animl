@@ -47,19 +47,16 @@ class DTreeViz:
     def __init__(self,dot):
         self.dot = dot
 
-    # def _repr_svg_(self):
-    #     return self.svg()
+    def _repr_svg_(self):
+        return self.svg()
 
-    def _ipython_display_(self):
-        tmp = tempfile.gettempdir()
-        svgfilename = f"{tmp}/DTreeViz_{getpid()}.svg"
-        self.save(svgfilename)
-        # display(SVG(filename="/tmp/t.svg"))
-        print(svgfilename)
-        display(SVG(filename=svgfilename))
-
-    def _repr_html_(self):
-        return "<h1>" + self.text + "</h1>"
+    # def _ipython_display_(self):
+    #     tmp = tempfile.gettempdir()
+    #     svgfilename = f"{tmp}/DTreeViz_{getpid()}.svg"
+    #     self.save(svgfilename)
+    #     # display(SVG(filename="/tmp/t.svg"))
+    #     # print(svgfilename)
+    #     display(SVG(filename=svgfilename))
 
     def topng(self):
         "Return tree image as png binary data"
