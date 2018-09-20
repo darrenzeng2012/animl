@@ -46,6 +46,7 @@ class DTreeViz:
         self.dot = dot
 
     def _repr_svg_(self):
+        display(SVG(filename="/tmp/t.svg"))
         return self.svg()
 
     def topng(self):
