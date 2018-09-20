@@ -10,6 +10,8 @@ from numbers import Number
 import matplotlib.patches as patches
 import tempfile
 from os import getpid, makedirs
+from IPython.core.display import SVG, display
+
 
 YELLOW = "#fefecd" # "#fbfbd0" # "#FBFEB0"
 BLUE = "#D9E6F5"
@@ -45,9 +47,19 @@ class DTreeViz:
     def __init__(self,dot):
         self.dot = dot
 
-    def _repr_svg_(self):
-        display(SVG(filename="/tmp/t.svg"))
-        return self.svg()
+    # def _repr_svg_(self):
+    #     return self.svg()
+
+    def _ipython_display_(self):
+        tmp = tempfile.gettempdir()
+        svgfilename = f"{tmp}/DTreeViz_{getpid()}.svg"
+        self.save(svgfilename)
+        # display(SVG(filename="/tmp/t.svg"))
+        print(svgfilename)
+        display(SVG(filename=svgfilename))
+
+    def _repr_html_(self):
+        return "<h1>" + self.text + "</h1>"
 
     def topng(self):
         "Return tree image as png binary data"
@@ -82,7 +94,7 @@ class DTreeViz:
             g.render(directory=path.parent, filename=path.stem, view=False, cleanup=True)
             cmd = ["pdftocairo", "-svg", pdffilename, filename]
             cmd = ["pdf2svg", pdffilename, filename]
-            print(' '.join(cmd))
+            # print(' '.join(cmd))
             # print(f"pdftocairo -svg {pdffilename} {filename}")
             stdout, stderr = run(cmd, capture_output=True, check=True, quiet=False)
         else:
