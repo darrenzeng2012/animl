@@ -65,7 +65,7 @@ def viz_diabetes(orientation="TD", max_depth=3, random_state=666, fancy=True, pi
 
 def viz_sweets(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=False):
     sweets = pd.read_csv("testing/data/sweetrs.csv")
-    sweets = sweets.sample(n=2000) # just grab 2000 of 17k
+    sweets = sweets.sample(n=500) # just grab 500 of 17k for plotting
 
     X_train, y_train = sweets.drop('rating', axis=1), sweets['rating']
 
@@ -237,7 +237,7 @@ if __name__ == '__main__':
     print(f"tmp dir is {tempfile.gettempdir()}")
     for f in viz_funcs:
         name = f.__name__[len("viz_"):]
-        # if name!='fires': continue
+        # if name!='sweets': continue
         save(name, dirname, "TD", 2)
         save(name, dirname, "TD", 4)
         if name=='iris':
