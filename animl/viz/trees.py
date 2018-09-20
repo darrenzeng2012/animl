@@ -421,7 +421,6 @@ def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifie
         else:
             # for now, always gen leaf
             regr_leaf_viz(node, y_train, target_name=target_name,
-                          fancy=fancy,
                           filename=f"{tmp}/leaf{node.id}_{getpid()}.svg",
                           y_range=y_range, precision=precision)
             leaves.append( regr_leaf_node(node) )
@@ -694,7 +693,6 @@ def regr_split_viz(node: ShadowDecTreeNode,
 def regr_leaf_viz(node : ShadowDecTreeNode,
                   y : (pd.Series,np.ndarray),
                   target_name,
-                  fancy,
                   filename:str=None,
                   y_range=None,
                   precision=1,
@@ -703,9 +701,7 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
     samples = node.samples()
     y = y[samples]
 
-    figsize = (.8,1.1)
-    if not fancy:
-        figsize = (.8, .95)
+    figsize = (.75, .8)
 
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     ax.tick_params(colors=GREY)
@@ -729,7 +725,7 @@ def regr_leaf_viz(node : ShadowDecTreeNode,
     ax.tick_params(axis='y', which='major', width=.3, labelcolor=GREY, labelsize=ticks_fontsize)
 
     mu = .5
-    sigma = .15
+    sigma = .08
     X = np.random.normal(mu, sigma, size=len(y))
     ax.set_xlim(0, 1)
     alpha = .25
