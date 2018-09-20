@@ -249,7 +249,7 @@ def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifie
             return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
 
     def node_label(node):
-        return f'<tr><td CELLPADDING="0" CELLSPACING="0"><font face="Helvetica" point-size="14"><i>Node {node.id}</i></font></td></tr>'
+        return f'<tr><td CELLPADDING="0" CELLSPACING="0"><font face="Helvetica" color="{GREY}" point-size="14"><i>Node {node.id}</i></font></td></tr>'
 
     def class_legend_html(label_fontsize: int = 12):
         elements = []
