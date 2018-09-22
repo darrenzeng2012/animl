@@ -105,5 +105,6 @@ viz = viz_boston(fancy=True, max_depth=5, orientation='TD')
 # with open("/tmp/t3.dot", "w") as f:
 #     f.write(st+"\n")
 #
+print(viz.dot)
 viz.save("/tmp/t.svg")
 viz.view()

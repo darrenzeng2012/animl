@@ -62,7 +62,7 @@ viz = dtreeviz(regr,
 viz.view()              
 ```
   
-<img src=testing/samples/boston-TD-2.png width=60% height=40%>
+<img src=testing/samples/boston-TD-2.svg width=60% height=40%>
   
   
 * **Classification decision tree**:  
@@ -84,7 +84,7 @@ viz = dtreeviz(classifier,
 viz.view() 
 ```
 
-<img src=testing/samples/iris-TD-2.png width=50% height=30% align="center">
+<img src=testing/samples/iris-TD-2.svg width=50% height=30% align="center">
 
 * **Prediction path**:  
 Highlights the decision nodes in which the feature value of single observation passed in argument `X` falls. Gives feature values of the observation and highlights features which are used by tree to traverse path. 
@@ -105,7 +105,7 @@ viz = dtreeviz(regr,
               
 viz.view()  
 ```
-<img src=testing/samples/diabetes-LR-2-X.png width=100% height=50%>
+<img src=testing/samples/diabetes-LR-2-X.svg width=100% height=50%>
   
 * **Decision tree without scatterplot or histograms for decision nodes**:  
 Simple tree without histograms or scatterplots for decision nodes. 
@@ -127,7 +127,7 @@ viz = dtreeviz(classifier,
 viz.view() 
 ```
 
-<img src=testing/samples/breast_cancer-TD-4-simple.png width=80% height=60%>
+<img src=testing/samples/breast_cancer-TD-4-simple.svg width=80% height=60%>
 
 
 For more examples and different implementations, please see the jupyter [notebook](notebooks/examples.ipynb) full of examples.
