@@ -65,6 +65,26 @@ def inline_svg_images(svg) -> str:
     return xml_str
 
 
+def get_SVG_shape(filename):
+    """
+    Sample line from SVG file from which we can get w,h:
+    <svg height="122.511795pt" version="1.1" viewBox="0 0 451.265312 122.511795"
+         width="451.265312pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="...">
+
+    Hmm...Seems we don't need this anymore but I will leave it just in case
+    """
+    with open(filename, "r") as f:
+        for line in f.readlines():
+            if line.startswith("<svg "):
+                args = line[len("<svg "):].split()
+                d = {}
+                for arg in args:
+                    a = arg.split('=')
+                    if len(a) == 2:
+                        d[a[0]] = a[1].strip('"').strip('pt')
+                return float(d['width']), float(d['height'])
+
+
 if __name__ == '__main__':
     # test rig
     with open("/tmp/foo.svg") as f:

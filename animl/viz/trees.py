@@ -173,12 +173,11 @@ def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifie
 
     def split_node(name, node_name, split):
         if fancy:
-            img_shape = get_SVG_shape(f"{tmp}/node{node.id}_{getpid()}.svg")
             labelgraph = node_label(node) if show_node_labels else ''
             html = f"""<table border="0">
             {labelgraph}
             <tr>
-                    <td port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/node{node.id}_{getpid()}.svg"/></td>
+                    <td port="img"><img src="{tmp}/node{node.id}_{getpid()}.svg"/></td>
             </tr>
             </table>"""
         else:
@@ -192,12 +191,11 @@ def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifie
 
     def regr_leaf_node(node, label_fontsize: int = 12):
         if True: # always generate fancy regr leaves for now but shrink a bit for nonfancy.
-            img_shape = get_SVG_shape(f"{tmp}/leaf{node.id}_{getpid()}.svg")
             labelgraph = node_label(node) if show_node_labels else ''
             html = f"""<table border="0">
             {labelgraph}
             <tr>
-                    <td port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/leaf{node.id}_{getpid()}.svg"/></td>
+                    <td port="img"><img src="{tmp}/leaf{node.id}_{getpid()}.svg"/></td>
             </tr>
             </table>"""
             if node.id in highlight_path:
@@ -254,12 +252,11 @@ def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifie
             return gr + annot
 
     def class_leaf_node(node, label_fontsize: int = 12):
-        img_shape = get_SVG_shape(f"{tmp}/leaf{node.id}_{getpid()}.svg")
         labelgraph = node_label(node) if show_node_labels else ''
         html = f"""<table border="0" CELLBORDER="0">
         {labelgraph}
         <tr>
-                <td port="img" fixedsize="true" width="{img_shape[0]}" height="{img_shape[1]}"><img src="{tmp}/leaf{node.id}_{getpid()}.svg"/></td>
+                <td port="img"><img src="{tmp}/leaf{node.id}_{getpid()}.svg"/></td>
         </tr>
         </table>"""
         if node.id in highlight_path:
@@ -839,22 +836,3 @@ def get_num_bins(histtype, n_classes):
     if histtype == 'barstacked':
         bins *= 2
     return bins
-
-
-def get_SVG_shape(filename):
-    """
-    Sample line from SVG file from which we can get w,h:
-    <svg height="122.511795pt" version="1.1" viewBox="0 0 451.265312 122.511795"
-         width="451.265312pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="...">
-    """
-    with open(filename, "r") as f:
-        for line in f.readlines():
-            if line.startswith("<svg "):
-                args = line[len("<svg "):].split()
-                d = {}
-                for arg in args:
-                    a = arg.split('=')
-                    if len(a)==2:
-                        d[a[0]] = a[1].strip('"').strip('pt')
-                return float(d['width']), float(d['height'])
-
