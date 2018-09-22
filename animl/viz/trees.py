@@ -190,66 +190,19 @@ def dtreeviz(tree_model: (tree.DecisionTreeRegressor, tree.DecisionTreeClassifie
 
 
     def regr_leaf_node(node, label_fontsize: int = 12):
-        if True: # always generate fancy regr leaves for now but shrink a bit for nonfancy.
-            labelgraph = node_label(node) if show_node_labels else ''
-            html = f"""<table border="0">
-            {labelgraph}
-            <tr>
-                    <td port="img"><img src="{tmp}/leaf{node.id}_{getpid()}.svg"/></td>
-            </tr>
-            </table>"""
-            if node.id in highlight_path:
-                return f'leaf{node.id} [margin="0" shape=box penwidth=".5" color="{HIGHLIGHT_COLOR}" style="dashed" label=<{html}>]'
-            else:
-                return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
+        # always generate fancy regr leaves for now but shrink a bit for nonfancy.
+        labelgraph = node_label(node) if show_node_labels else ''
+        html = f"""<table border="0">
+        {labelgraph}
+        <tr>
+                <td port="img"><img src="{tmp}/leaf{node.id}_{getpid()}.svg"/></td>
+        </tr>
+        </table>"""
+        if node.id in highlight_path:
+            return f'leaf{node.id} [margin="0" shape=box penwidth=".5" color="{HIGHLIGHT_COLOR}" style="dashed" label=<{html}>]'
         else:
-            value = node.prediction()
-            width = prop_size(node.nsamples(),
-                              counts=shadow_tree.leaf_sample_counts(),
-                              output_range=(1.01,1.5))
-            width = np.sqrt(np.log(width)) # see small n diffs visually
-            gr = f'leaf{node.id} [fixedsize="true" width="{width}" style=filled fillcolor="{YELLOW}" shape=circle label=""]'
+            return f'leaf{node.id} [margin="0" shape=plain label=<{html}>]'
 
-            if orientation == 'TD':
-                if fancy:
-                    labeldistance = "1.5"
-                else:
-                    labeldistance = "2"
-            else:
-                if fancy:
-                    labeldistance = "2.2"
-                else:
-                    labeldistance = "3.7"
-            # label = f'<font face="Helvetica" color="{GREY}" point-size="{label_fontsize}">n={node.nsamples()}</font>'
-            if orientation=='TD':
-                label = f"""<table border="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
-                <tr>
-                        <td align="center" CELLPADDING="0" CELLSPACING="0"><font face="Helvetica" color="#444443" point-size="11">{target_name}={round(value)}</font></td>
-                </tr>
-                <tr>
-                        <td align="center" CELLPADDING="0" CELLSPACING="0"><font face="Helvetica" color="#444443" point-size="11">n={node.nsamples()}</font></td>
-                </tr>
-                </table>
-                """
-            else:
-                label = f"""<table border="0" CELLPADDING="0" CELLBORDER="0" CELLSPACING="0">
-                <tr>
-                        <td align="right" CELLPADDING="0" CELLSPACING="0"><font face="Helvetica" color="#444443" point-size="11">{target_name}={round(value)}, n={node.nsamples()}</font></td>
-                </tr>
-                </table>
-                """
-
-            spacer_width = .15 * (1 / width) # smaller nodes need bigger space for labels
-            annot = f"""
-               leaf{node.id}_annot [shape=none width="{spacer_width}" label=""]
-               leaf{node.id}_spacer [shape=none label=""]
-               leaf{node.id} -> leaf{node.id}_annot [penwidth=0 arrowsize=0 labeldistance="{labeldistance}" labelangle="0" taillabel=<{label}>]
-                {{
-                    rank=same;
-                    leaf{node.id} -> leaf{node.id}_spacer [style=invis]
-                }}
-            """
-            return gr + annot
 
     def class_leaf_node(node, label_fontsize: int = 12):
         labelgraph = node_label(node) if show_node_labels else ''

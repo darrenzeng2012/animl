@@ -93,7 +93,7 @@ def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True):
 #     return st
 
 
-viz = viz_boston(fancy=True, max_depth=5, orientation='TD')
+viz = viz_boston(fancy=False, max_depth=5, orientation='TD')
 #st = viz_breast_cancer(fancy=True, orientation='TD')
 #st = viz_iris(fancy=True, orientation='TD')
 #st = viz_digits(fancy=True, orientation='TD')
