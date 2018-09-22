@@ -9,7 +9,7 @@ from animl.trees import *
 from numbers import Number
 import matplotlib.patches as patches
 import tempfile
-from os import getpid, makedirs
+from os import getpid, makedirs, remove
 from IPython.core.display import SVG, display
 
 
@@ -94,6 +94,7 @@ class DTreeViz:
             # print(' '.join(cmd))
             # print(f"pdftocairo -svg {pdffilename} {filename}")
             stdout, stderr = run(cmd, capture_output=True, check=True, quiet=False)
+            remove(pdffilename)
         else:
             g = graphviz.Source(self.dot, format=format)
             fname = g.save(directory=path.parent, filename=path.stem)
