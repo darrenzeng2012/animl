@@ -9,7 +9,7 @@ setup(
     #py_modules=['animl'],
     author='Terence Parr',
     author_email='parrt@antlr.org',
-    description='A python machine learning library for structured data',
+    description='A python machine learning library for structured data with decision tree visualization',
     keywords='machine-learning data structures',
     classifiers=['License :: OSI Approved :: MIT License',
                  'Intended Audience :: Developers']
