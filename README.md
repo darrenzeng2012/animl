@@ -15,6 +15,8 @@ There are lots of intricaties in the plots that Terence had to obsess over durin
 
 ### Requirements
 
+*So far, we've only tested this on OS X*.  Please email us with notes on making it work on other platforms. thanks!
+
 Needs graphviz/dot lib.
 
 ```bash
