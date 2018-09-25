@@ -2,6 +2,14 @@
 
 This is the start of a python machine learning library to augment scikit-learn. At the moment, all we have is functionality for decision tree visualization and model interpretation.
 
+To install, do this:
+
+```bash
+pip install animl
+```
+
+and, if you 
+
 ## Decision tree visualization
 
 By [Terence Parr](http://parrt.cs.usfca.edu) and [Prince Grover](https://www.linkedin.com/in/groverpr)
