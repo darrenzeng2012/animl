@@ -26,7 +26,7 @@ Decision trees are the fundamental building block of gradient boosting machines 
 
 The visualizations are inspired by an educational animiation by [R2D3](http://www.r2d3.us/); [A visual introduction to machine learning](http://www.r2d3.us/visual-intro-to-machine-learning-part-1/). With animl, you can visualize how the feature space is split up at decision nodes, how the training samples get ditributed in leaf nodes and how the tree makes prediction for a single observation. These operations are very critical to grasp for someone who wants to understand how classfication or regression decision tree works. 
 
-There are lots of intricaties in the plots that Terence had to obsess over during the contruction of the library. See [How to visualize decision tree models](https://www.google.com/) for deeper discussion of our decision tree visualization tool and how we have chosen to visualize the feature-target space of a decision tree. 
+There are lots of intricaties in the plots that Terence had to obsess over during the contruction of the library. See [How to visualize decision trees](http://explained.ai/decision-tree-viz/index.html) for deeper discussion of our decision tree visualization tool and how we have chosen to visualize the feature-target space of a decision tree. 
 
 
 ### Usage
