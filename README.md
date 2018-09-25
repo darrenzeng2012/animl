@@ -2,13 +2,21 @@
 
 This is the start of a python machine learning library to augment scikit-learn. At the moment, all we have is functionality for decision tree visualization and model interpretation.
 
-To install, do this:
+(*So far, we've only tested this on OS X*.)  To install, do this:
 
 ```bash
 pip install animl
 ```
 
-and, if you 
+and you need the following tools for the decision tree visualizations to work:
+
+```bash
+brew install poppler
+brew install pdf2svg
+brew install graphviz --with-librsvg --with-app --with-pango
+```
+
+Please email us with notes on making it work on other platforms. thanks!
 
 ## Decision tree visualization
 
@@ -20,24 +28,6 @@ The visualizations are inspired by an educational animiation by [R2D3](http://ww
 
 There are lots of intricaties in the plots that Terence had to obsess over during the contruction of the library. See [How to visualize decision tree models](https://www.google.com/) for deeper discussion of our decision tree visualization tool and how we have chosen to visualize the feature-target space of a decision tree. 
 
-
-### Requirements
-
-*So far, we've only tested this on OS X*.  Please email us with notes on making it work on other platforms. thanks!
-
-Needs graphviz/dot lib.
-
-```bash
-pip install graphviz
-```
-
-And, on latest mac versions, you need:
-
-```bash
-brew install poppler
-brew install pdf2svg
-brew install graphviz --with-librsvg --with-app --with-pango
-```
 
 ### Usage
 
