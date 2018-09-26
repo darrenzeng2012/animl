@@ -74,6 +74,22 @@ def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True):
                   X=X)
     return viz
 
+def viz_diabetes(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=False):
+    diabetes = load_diabetes()
+
+    regr = tree.DecisionTreeRegressor(max_depth=max_depth, random_state=random_state)
+    regr.fit(diabetes.data, diabetes.target)
+
+    X = None
+    if pickX:
+        X = diabetes.data[np.random.randint(0, len(diabetes.data)),:]
+
+    viz = dtreeviz(regr, diabetes.data, diabetes.target, target_name='progr',
+                  feature_names=diabetes.feature_names, orientation=orientation,
+                  fancy=fancy,
+                  X=X)
+
+    return viz
 #
 # def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=False):
 #     # data from https://archive.ics.uci.edu/ml/datasets/User+Knowledge+Modeling
@@ -92,11 +108,31 @@ def viz_knowledge(orientation="TD", max_depth=3, random_state=666, fancy=True):
 #                   X=X_train.iloc[3,:])
 #     return st
 
+def viz_digits(orientation="TD", max_depth=3, random_state=666, fancy=True, pickX=False):
+    clf = tree.DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
+    digits = load_digits()
 
-viz = viz_boston(fancy=False, max_depth=5, orientation='TD')
+    # "8x8 image of integer pixels in the range 0..16."
+    columns = [f'pixel[{i},{j}]' for i in range(8) for j in range(8)]
+
+    clf.fit(digits.data, digits.target)
+
+    X = None
+    if pickX:
+        X = digits.data[np.random.randint(0, len(digits.data)),:]
+
+    viz = dtreeviz(clf, digits.data, digits.target, target_name='number',
+                  feature_names=columns, orientation=orientation,
+                  class_names=[chr(c) for c in range(ord('0'),ord('9')+1)],
+                  fancy=fancy, histtype='bar',
+                  X=X)
+    return viz
+
+
+#viz = viz_boston(fancy=False, max_depth=100, orientation='TD')
 #st = viz_breast_cancer(fancy=True, orientation='TD')
 #st = viz_iris(fancy=True, orientation='TD')
-#st = viz_digits(fancy=True, orientation='TD')
+viz = viz_digits(fancy=True, max_depth=100, orientation='TD')
 #viz = viz_knowledge(fancy=True, orientation='TD', max_depth=15)
 #g = graphviz.Source(st)
 
